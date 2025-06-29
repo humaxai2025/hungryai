@@ -4,16 +4,8 @@
     {
       "src": "package.json",
       "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+      "config": { "distDir": "dist" }
     }
-  ],
-  "rewrites": [
-    { "source": "/data/:match*", "destination": "/data/:match*" },
-    { "source": "/assets/:match*", "destination": "/assets/:match*" },
-    { "source": "/:all*(js|css|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)", "destination": "/:all*" },
-    { "source": "/:path*", "destination": "/index.html" }
   ],
   "headers": [
     {
