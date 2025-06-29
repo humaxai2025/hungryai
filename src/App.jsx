@@ -484,14 +484,50 @@ const App = () => {
 
   const parseIngredients = (ingredientsStr) => {
     try {
-      // Safely handle the ingredients string format
-      const cleanStr = ingredientsStr.replace(/^\[|\]$/g, '');
-      return cleanStr.split('\', \'').map(ingredient => 
-        ingredient.replace(/^\'|\'$/g, '').replace(/^\"|\"$/g, '')
-      );
+      // Handle different ingredient formats
+      if (!ingredientsStr) return [];
+      
+      // If it's already an array
+      if (Array.isArray(ingredientsStr)) {
+        return ingredientsStr.map(ingredient => String(ingredient || ''));
+      }
+      
+      // If it's a string that looks like JSON array
+      if (typeof ingredientsStr === 'string') {
+        // Handle different bracket formats
+        if (ingredientsStr.startsWith('[') && ingredientsStr.endsWith(']')) {
+          // Clean up the string and try to parse as JSON
+          const cleanStr = ingredientsStr.replace(/^\[|\]$/g, '');
+          
+          // Split by comma and clean up quotes
+          const ingredients = cleanStr.split(',').map(ingredient => {
+            return ingredient.trim()
+              .replace(/^['"`]|['"`]$/g, '') // Remove surrounding quotes
+              .replace(/\\'/g, "'") // Unescape quotes
+              .trim();
+          }).filter(ingredient => ingredient.length > 0);
+          
+          return ingredients;
+        } else {
+          // Handle comma-separated string without brackets
+          return ingredientsStr.split(',').map(ingredient => ingredient.trim()).filter(ingredient => ingredient.length > 0);
+        }
+      }
+      
+      // If it's an object, try to extract meaningful data
+      if (typeof ingredientsStr === 'object') {
+        if (ingredientsStr.list && Array.isArray(ingredientsStr.list)) {
+          return ingredientsStr.list.map(ingredient => String(ingredient || ''));
+        }
+        // Convert object values to array
+        return Object.values(ingredientsStr).map(ingredient => String(ingredient || ''));
+      }
+      
+      // Fallback: convert to string and return as single item
+      return [String(ingredientsStr)];
     } catch (error) {
-      console.warn('Error parsing ingredients:', error);
-      return [];
+      console.warn('Error parsing ingredients:', error, 'Input:', ingredientsStr);
+      return ['Ingredients available - view recipe for details'];
     }
   };
 
@@ -505,8 +541,38 @@ const App = () => {
         const response = await fetch('/data/titles_only.json');
         if (response.ok) {
           const fetchedData = await response.json();
-          console.log('✅ Successfully loaded', fetchedData.length, 'recipes from titles_only.json');
-          setRecipes(fetchedData);
+          console.log('📁 Raw data structure:', fetchedData);
+          
+          // Handle different JSON structures
+          let recipesArray = [];
+          if (Array.isArray(fetchedData)) {
+            recipesArray = fetchedData;
+          } else if (fetchedData.recipes && Array.isArray(fetchedData.recipes)) {
+            recipesArray = fetchedData.recipes;
+          } else if (fetchedData.data && Array.isArray(fetchedData.data)) {
+            recipesArray = fetchedData.data;
+          } else if (typeof fetchedData === 'object') {
+            // If it's an object, try to convert values to array
+            recipesArray = Object.values(fetchedData).filter(item => 
+              typeof item === 'object' && item.name
+            );
+          }
+          
+          // Validate and normalize recipe data
+          const normalizedRecipes = recipesArray.map((recipe, index) => ({
+            name: recipe.name || recipe.title || `Recipe ${index + 1}`,
+            collection: recipe.collection || 'collection/general/',
+            recipie_collection_idx: recipe.recipie_collection_idx || recipe.id || index + 1,
+            image: recipe.image || null,
+            descripition: recipe.descripition || recipe.description || recipe.desc || 'Delicious recipe to try!',
+            ingredients: recipe.ingredients || "['Various ingredients']",
+            steps: recipe.steps || "['Follow cooking instructions']",
+            Neutretion: recipe.Neutretion || recipe.nutrition || '<p>Nutritional information varies</p>'
+          }));
+          
+          console.log('✅ Successfully loaded', normalizedRecipes.length, 'recipes from titles_only.json');
+          console.log('📋 Sample recipe structure:', normalizedRecipes[0]);
+          setRecipes(normalizedRecipes);
           setRecipesError(null);
         } else {
           throw new Error('Failed to load titles_only.json');
@@ -519,8 +585,22 @@ const App = () => {
           const fallbackResponse = await fetch('/data/recipe.json');
           if (fallbackResponse.ok) {
             const fallbackData = await fallbackResponse.json();
-            console.log('✅ Successfully loaded', fallbackData.length, 'recipes from recipe.json fallback');
-            setRecipes(fallbackData);
+            
+            // Apply same normalization to fallback data
+            const fallbackArray = Array.isArray(fallbackData) ? fallbackData : [fallbackData];
+            const normalizedFallback = fallbackArray.map((recipe, index) => ({
+              name: recipe.name || `Recipe ${index + 1}`,
+              collection: recipe.collection || 'collection/general/',
+              recipie_collection_idx: recipe.recipie_collection_idx || index + 1,
+              image: recipe.image || null,
+              descripition: recipe.descripition || recipe.description || 'Delicious recipe to try!',
+              ingredients: recipe.ingredients || "['Various ingredients']",
+              steps: recipe.steps || "['Follow cooking instructions']",
+              Neutretion: recipe.Neutretion || '<p>Nutritional information varies</p>'
+            }));
+            
+            console.log('✅ Successfully loaded', normalizedFallback.length, 'recipes from recipe.json fallback');
+            setRecipes(normalizedFallback);
             setRecipesError(null);
           } else {
             throw new Error('Both titles_only.json and recipe.json failed to load');
@@ -541,26 +621,57 @@ const App = () => {
 
   // Search functionality
   const handleSearch = (query) => {
-    if (!query.trim() || recipes.length === 0) {
+    if (!query.trim() || !recipes || recipes.length === 0) {
       setSearchResults([]);
       setShowResults(false);
       return;
     }
 
-    const results = recipes.filter(recipe => {
-      const ingredients = parseIngredients(recipe.ingredients);
-      return (
-        recipe.name.toLowerCase().includes(query.toLowerCase()) ||
-        recipe.descripition.toLowerCase().includes(query.toLowerCase()) ||
-        ingredients.some(ingredient => 
-          ingredient.toLowerCase().includes(query.toLowerCase())
-        ) ||
-        recipe.collection.toLowerCase().includes(query.toLowerCase())
-      );
-    });
+    // Ensure recipes is an array before filtering
+    if (!Array.isArray(recipes)) {
+      console.error('❌ Recipes is not an array:', recipes);
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
 
-    setSearchResults(results);
-    setShowResults(true);
+    try {
+      const results = recipes.filter(recipe => {
+        // Safely handle recipe data
+        if (!recipe || typeof recipe !== 'object') return false;
+        
+        const recipeName = (recipe.name || '').toLowerCase();
+        const recipeDesc = (recipe.descripition || recipe.description || '').toLowerCase();
+        const recipeCollection = (recipe.collection || '').toLowerCase();
+        const queryLower = query.toLowerCase();
+        
+        // Parse ingredients safely
+        let ingredients = [];
+        try {
+          ingredients = parseIngredients(recipe.ingredients || '[]');
+        } catch (error) {
+          console.warn('Error parsing ingredients for recipe:', recipe.name, error);
+          ingredients = [];
+        }
+        
+        return (
+          recipeName.includes(queryLower) ||
+          recipeDesc.includes(queryLower) ||
+          ingredients.some(ingredient => 
+            (ingredient || '').toLowerCase().includes(queryLower)
+          ) ||
+          recipeCollection.includes(queryLower)
+        );
+      });
+
+      setSearchResults(results);
+      setShowResults(true);
+      console.log(`🔍 Search for "${query}" found ${results.length} results`);
+    } catch (error) {
+      console.error('❌ Search error:', error);
+      setSearchResults([]);
+      setShowResults(false);
+    }
   };
 
   const handleRecipeSelect = async (recipe) => {
@@ -1505,12 +1616,27 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
           <div className="text-center py-16">
             <Sparkles className="h-12 w-12 text-indigo-600 animate-spin mx-auto mb-4" />
             <p className="text-xl text-gray-600">Loading recipes...</p>
+            <p className="text-sm text-gray-500 mt-2">Checking titles_only.json format...</p>
           </div>
         ) : recipesError ? (
           <div className="text-center py-16">
             <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-2xl mx-auto">
               <p className="text-red-600 text-lg">{recipesError}</p>
               <p className="text-gray-600 mt-2">Using embedded recipes for demonstration.</p>
+            </div>
+          </div>
+        ) : recipes.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 max-w-2xl mx-auto">
+              <AlertCircle className="h-12 w-12 text-amber-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-amber-800 mb-2">No Recipes Found</h3>
+              <p className="text-amber-700">
+                The titles_only.json file was loaded but no valid recipes were found. 
+                Please check the console for the data structure details.
+              </p>
+              <p className="text-sm text-amber-600 mt-4">
+                Expected format: Array of objects with at least a 'name' field, or an object with 'recipes'/'data' array.
+              </p>
             </div>
           </div>
         ) : !selectedRecipe ? (
