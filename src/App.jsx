@@ -537,8 +537,8 @@ const App = () => {
       
       try {
         // Try to fetch from new primary data file
-        console.log('🔍 Loading recipes from titles_only.json...');
-        const response = await fetch('/data/titles_only.json');
+        console.log('🔍 Loading recipes from recipedata.json...');
+        const response = await fetch('/data/recipedata.json');
         if (response.ok) {
           const fetchedData = await response.json();
           console.log('📁 Raw data structure:', fetchedData);
@@ -570,15 +570,15 @@ const App = () => {
             Neutretion: recipe.Neutretion || recipe.nutrition || '<p>Nutritional information varies</p>'
           }));
           
-          console.log('✅ Successfully loaded', normalizedRecipes.length, 'recipes from titles_only.json');
+          console.log('✅ Successfully loaded', normalizedRecipes.length, 'recipes from recipedata.json');
           console.log('📋 Sample recipe structure:', normalizedRecipes[0]);
           setRecipes(normalizedRecipes);
           setRecipesError(null);
         } else {
-          throw new Error('Failed to load titles_only.json');
+          throw new Error('Failed to load recipedata.json');
         }
       } catch (error) {
-        console.log('⚠️ Failed to load titles_only.json, trying recipe.json fallback:', error.message);
+        console.log('⚠️ Failed to load recipedata.json, trying recipe.json fallback:', error.message);
         
         try {
           // Fallback to original recipe.json
@@ -603,7 +603,7 @@ const App = () => {
             setRecipes(normalizedFallback);
             setRecipesError(null);
           } else {
-            throw new Error('Both titles_only.json and recipe.json failed to load');
+            throw new Error('Both recipedata.json and recipe.json failed to load');
           }
         } catch (fallbackError) {
           console.log('⚠️ All external sources failed, using embedded recipes:', fallbackError.message);
@@ -1616,7 +1616,7 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
           <div className="text-center py-16">
             <Sparkles className="h-12 w-12 text-indigo-600 animate-spin mx-auto mb-4" />
             <p className="text-xl text-gray-600">Loading recipes...</p>
-            <p className="text-sm text-gray-500 mt-2">Checking titles_only.json format...</p>
+            <p className="text-sm text-gray-500 mt-2">Checking recipedata.json format...</p>
           </div>
         ) : recipesError ? (
           <div className="text-center py-16">
@@ -1631,7 +1631,7 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
               <AlertCircle className="h-12 w-12 text-amber-600 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-amber-800 mb-2">No Recipes Found</h3>
               <p className="text-amber-700">
-                The titles_only.json file was loaded but no valid recipes were found. 
+                The recipedata.json file was loaded but no valid recipes were found. 
                 Please check the console for the data structure details.
               </p>
               <p className="text-sm text-amber-600 mt-4">
