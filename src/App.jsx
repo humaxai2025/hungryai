@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Clock, Apple, Utensils, BookOpen, Sparkles, AlertCircle } from 'lucide-react';
+import { Search, Clock, Apple, Utensils, BookOpen, Sparkles, AlertCircle, ChevronLeft, ChevronRight, Share2, Heart, MapPin, Calendar, Award, Lightbulb, X } from 'lucide-react';
 
 // Custom ChefHat component to avoid icon loading issues
 const ChefHat = ({ className = "h-5 w-5" }) => (
@@ -7,6 +7,401 @@ const ChefHat = ({ className = "h-5 w-5" }) => (
     <path d="M17.5 11c.276 0 .5-.224.5-.5s-.224-.5-.5-.5-.5.224-.5.5.224.5.5.5zm-11 0c.276 0 .5-.224.5-.5s-.224-.5-.5-.5-.5.224-.5.5.224.5.5.5zm13.5-6c0-1.654-1.346-3-3-3-.771 0-1.468.301-2 .78-.532-.479-1.229-.78-2-.78s-1.468.301-2 .78c-.532-.479-1.229-.78-2-.78s-1.468.301-2 .78c-.532-.479-1.229-.78-2-.78-1.654 0-3 1.346-3 3v1c0 1.654 1.346 3 3 3h.184l1.316 7h11l1.316-7h.184c1.654 0 3-1.346 3-3v-1zm-2 1c0 .551-.449 1-1 1h-12c-.551 0-1-.449-1-1v-1c0-.551.449-1 1-1s1 .449 1 1h2c0-.551.449-1 1-1s1 .449 1 1h2c0-.551.449-1 1-1s1 .449 1 1h2c0-.551.449-1 1-1s1 .449 1 1h2c0-.551.449-1 1-1s1 .449 1 1v1z"/>
   </svg>
 );
+
+// Cultural Story Cards Component
+const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
+  const [currentCard, setCurrentCard] = useState(0);
+  const [isSharing, setIsSharing] = useState(false);
+  const [liked, setLiked] = useState(false);
+
+  // Generate story cards from cultural information
+  const generateStoryCards = () => {
+    if (!culturalInfo) return [];
+
+    const cards = [];
+
+    // Card 1: Recipe Introduction with cultural badge
+    cards.push({
+      type: 'intro',
+      title: recipe.name,
+      subtitle: 'Cultural Journey',
+      content: `Discover the rich cultural heritage behind this beloved dish from ${culturalInfo.origin || 'various traditions'}.`,
+      background: 'bg-gradient-to-br from-purple-500 to-pink-500',
+      icon: <ChefHat className="h-8 w-8 text-white" />,
+      badge: getCulturalBadge(recipe.name)
+    });
+
+    // Card 2: Origin Story
+    if (culturalInfo.origin) {
+      cards.push({
+        type: 'origin',
+        title: 'Origins',
+        subtitle: culturalInfo.origin,
+        content: culturalInfo.history || 'A dish with deep cultural roots passed down through generations.',
+        background: 'bg-gradient-to-br from-blue-500 to-indigo-600',
+        icon: <MapPin className="h-6 w-6 text-white" />,
+        didYouKnow: getDidYouKnowFact(recipe.name)
+      });
+    }
+
+    // Card 3: Cultural Significance
+    if (culturalInfo.significance) {
+      cards.push({
+        type: 'significance',
+        title: 'Cultural Significance',
+        subtitle: 'Traditional Meaning',
+        content: culturalInfo.significance,
+        background: 'bg-gradient-to-br from-emerald-500 to-teal-600',
+        icon: <Award className="h-6 w-6 text-white" />,
+        timeline: getHistoricalTimeline(recipe.name)
+      });
+    }
+
+    // Card 4: Traditional Serving
+    if (culturalInfo.serving) {
+      cards.push({
+        type: 'serving',
+        title: 'Traditional Serving',
+        subtitle: 'How It\'s Enjoyed',
+        content: culturalInfo.serving,
+        background: 'bg-gradient-to-br from-orange-500 to-red-500',
+        icon: <Utensils className="h-6 w-6 text-white" />,
+        funFact: getServingFact(recipe.name)
+      });
+    }
+
+    // Card 5: Seasonal Connection
+    if (culturalInfo.season) {
+      cards.push({
+        type: 'season',
+        title: 'Seasonal Traditions',
+        subtitle: 'When It\'s Celebrated',
+        content: culturalInfo.season,
+        background: 'bg-gradient-to-br from-amber-500 to-yellow-500',
+        icon: <Calendar className="h-6 w-6 text-white" />,
+        celebration: getCelebrationInfo(recipe.name)
+      });
+    }
+
+    // Card 6: Cooking Tips & Wisdom
+    if (culturalInfo.tips) {
+      cards.push({
+        type: 'tips',
+        title: 'Ancient Wisdom',
+        subtitle: 'Traditional Techniques',
+        content: culturalInfo.tips,
+        background: 'bg-gradient-to-br from-violet-500 to-purple-600',
+        icon: <Lightbulb className="h-6 w-6 text-white" />,
+        masterTip: getMasterTip(recipe.name)
+      });
+    }
+
+    return cards;
+  };
+
+  const storyCards = generateStoryCards();
+
+  const nextCard = () => {
+    setCurrentCard((prev) => (prev + 1) % storyCards.length);
+  };
+
+  const prevCard = () => {
+    setCurrentCard((prev) => (prev - 1 + storyCards.length) % storyCards.length);
+  };
+
+  const handleShare = async () => {
+    setIsSharing(true);
+    const currentCardData = storyCards[currentCard];
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${recipe.name} - ${currentCardData.title}`,
+          text: `${currentCardData.content} Discover more cultural recipes on FlavorAI!`,
+          url: window.location.href
+        });
+      } else {
+        // Fallback for browsers without native sharing
+        const shareText = `🍳 ${recipe.name} - ${currentCardData.title}\n\n${currentCardData.content}\n\nDiscover more cultural recipes on FlavorAI! ${window.location.href}`;
+        await navigator.clipboard.writeText(shareText);
+        alert('Content copied to clipboard!');
+      }
+    } catch (error) {
+      console.log('Share failed:', error);
+    }
+    setIsSharing(false);
+  };
+
+  if (storyCards.length === 0) return null;
+
+  const currentCardData = storyCards[currentCard];
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <div className="relative w-full max-w-md">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors z-10"
+        >
+          <X className="h-8 w-8" />
+        </button>
+
+        {/* Story Card */}
+        <div className={`relative w-full h-96 rounded-2xl shadow-2xl overflow-hidden ${currentCardData.background}`}>
+          {/* Header */}
+          <div className="absolute top-0 left-0 right-0 p-6 bg-black bg-opacity-20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {currentCardData.icon}
+                <div>
+                  <h3 className="text-white font-bold text-lg">{currentCardData.title}</h3>
+                  <p className="text-white text-opacity-90 text-sm">{currentCardData.subtitle}</p>
+                </div>
+              </div>
+              
+              {/* Cultural Badge */}
+              {currentCardData.badge && (
+                <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                  <span className="text-white text-xs font-semibold">{currentCardData.badge}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="absolute inset-0 flex flex-col justify-center px-6 pt-20 pb-20">
+            <div className="text-center text-white">
+              <p className="text-lg leading-relaxed mb-4">{currentCardData.content}</p>
+              
+              {/* Special content based on card type */}
+              {currentCardData.didYouKnow && (
+                <div className="bg-white bg-opacity-20 rounded-lg p-4 mb-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Lightbulb className="h-5 w-5" />
+                    <span className="font-semibold">Did You Know?</span>
+                  </div>
+                  <p className="text-sm">{currentCardData.didYouKnow}</p>
+                </div>
+              )}
+
+              {currentCardData.timeline && (
+                <div className="bg-white bg-opacity-20 rounded-lg p-4 mb-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Calendar className="h-5 w-5" />
+                    <span className="font-semibold">Historical Timeline</span>
+                  </div>
+                  <div className="text-sm space-y-1">
+                    {currentCardData.timeline.map((event, index) => (
+                      <div key={index} className="flex justify-between">
+                        <span className="font-medium">{event.year}</span>
+                        <span>{event.event}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {currentCardData.funFact && (
+                <div className="bg-white bg-opacity-20 rounded-lg p-3 mb-4">
+                  <p className="text-sm font-medium">💡 {currentCardData.funFact}</p>
+                </div>
+              )}
+
+              {currentCardData.celebration && (
+                <div className="bg-white bg-opacity-20 rounded-lg p-3 mb-4">
+                  <p className="text-sm">🎉 {currentCardData.celebration}</p>
+                </div>
+              )}
+
+              {currentCardData.masterTip && (
+                <div className="bg-white bg-opacity-20 rounded-lg p-3 mb-4">
+                  <p className="text-sm">👨‍🍳 Master's Tip: {currentCardData.masterTip}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Footer with actions */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-black bg-opacity-20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setLiked(!liked)}
+                  className={`transition-colors ${liked ? 'text-red-400' : 'text-white'}`}
+                >
+                  <Heart className={`h-6 w-6 ${liked ? 'fill-current' : ''}`} />
+                </button>
+                <button
+                  onClick={handleShare}
+                  disabled={isSharing}
+                  className="text-white hover:text-gray-300 transition-colors"
+                >
+                  <Share2 className="h-6 w-6" />
+                </button>
+              </div>
+              
+              {/* Progress indicators */}
+              <div className="flex space-x-2">
+                {storyCards.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      index === currentCard ? 'bg-white' : 'bg-white bg-opacity-40'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation arrows */}
+          {storyCards.length > 1 && (
+            <>
+              <button
+                onClick={prevCard}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors"
+              >
+                <ChevronLeft className="h-8 w-8" />
+              </button>
+              <button
+                onClick={nextCard}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors"
+              >
+                <ChevronRight className="h-8 w-8" />
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Card counter */}
+        <div className="text-center mt-4 text-white">
+          <span className="text-sm">{currentCard + 1} of {storyCards.length}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Helper functions for generating cultural content
+const getCulturalBadge = (recipeName) => {
+  const badges = {
+    'paneer': 'Mughal Heritage',
+    'biryani': 'Royal Cuisine',
+    'chickpea': 'Ancient Grain',
+    'tofu': 'Buddhist Tradition',
+    'pizza': 'Italian Classic',
+    'teriyaki': 'Japanese Art',
+    'quinoa': 'Inca Superfood',
+    'curry': 'Spice Route'
+  };
+  
+  for (const [key, badge] of Object.entries(badges)) {
+    if (recipeName.toLowerCase().includes(key)) {
+      return badge;
+    }
+  }
+  return 'Cultural Heritage';
+};
+
+const getDidYouKnowFact = (recipeName) => {
+  const facts = {
+    'paneer': 'Paneer was first mentioned in ancient Indian texts over 2,000 years ago and was considered food fit for gods.',
+    'biryani': 'The word "biryani" comes from the Persian word "birian" meaning "fried before cooking."',
+    'chickpea': 'Chickpeas are one of humanity\'s oldest cultivated crops, dating back 10,000 years.',
+    'tofu': 'Tofu was accidentally discovered by a Chinese cook who curdled soy milk with sea salt.',
+    'pizza': 'The first pizzeria in America opened in 1905 in New York City.',
+    'teriyaki': 'Teriyaki was originally used to preserve fish in Japan before refrigeration.',
+    'quinoa': 'Quinoa was so sacred to the Incas that the emperor would plant the first seeds each year.',
+    'curry': 'The word "curry" comes from the Tamil word "kari" meaning sauce or relish.'
+  };
+  
+  for (const [key, fact] of Object.entries(facts)) {
+    if (recipeName.toLowerCase().includes(key)) {
+      return fact;
+    }
+  }
+  return 'This dish has traveled through countless generations, carrying stories and traditions in every bite.';
+};
+
+const getHistoricalTimeline = (recipeName) => {
+  const timelines = {
+    'biryani': [
+      { year: '1398', event: 'Timur brings pilaf to India' },
+      { year: '1526', event: 'Mughal Empire establishes' },
+      { year: '1650', event: 'Biryani perfected in courts' }
+    ],
+    'pizza': [
+      { year: '1889', event: 'Pizza Margherita created' },
+      { year: '1905', event: 'First US pizzeria opens' },
+      { year: '1958', event: 'Pizza Hut founded' }
+    ],
+    'tofu': [
+      { year: '206 BC', event: 'Tofu invented in China' },
+      { year: '710 AD', event: 'Reaches Japan' },
+      { year: '1960s', event: 'Becomes popular in West' }
+    ]
+  };
+  
+  for (const [key, timeline] of Object.entries(timelines)) {
+    if (recipeName.toLowerCase().includes(key)) {
+      return timeline;
+    }
+  }
+  return [
+    { year: 'Ancient', event: 'Recipe origins' },
+    { year: 'Medieval', event: 'Trade spreads recipe' },
+    { year: 'Modern', event: 'Global popularity' }
+  ];
+};
+
+const getServingFact = (recipeName) => {
+  const facts = {
+    'biryani': 'Traditionally served on banana leaves with each grain of rice separate and aromatic.',
+    'pizza': 'In Naples, pizza is eaten with a fork and knife, never by hand!',
+    'tofu': 'Best enjoyed family-style with chopsticks, emphasizing community dining.',
+    'curry': 'Served with rice and eaten by hand, mixing flavors with each bite.'
+  };
+  
+  for (const [key, fact] of Object.entries(facts)) {
+    if (recipeName.toLowerCase().includes(key)) {
+      return fact;
+    }
+  }
+  return 'Best shared with loved ones around a table full of conversation.';
+};
+
+const getCelebrationInfo = (recipeName) => {
+  const celebrations = {
+    'biryani': 'Essential at weddings, festivals, and Eid celebrations across South Asia.',
+    'pizza': 'A staple of Italian festivals and family Sunday dinners.',
+    'tofu': 'Featured in Buddhist temple festivals and vegetarian celebrations.',
+    'curry': 'Central to Diwali feasts and harvest festivals.'
+  };
+  
+  for (const [key, celebration] of Object.entries(celebrations)) {
+    if (recipeName.toLowerCase().includes(key)) {
+      return celebration;
+    }
+  }
+  return 'Enjoyed during special occasions and family gatherings.';
+};
+
+const getMasterTip = (recipeName) => {
+  const tips = {
+    'biryani': 'Cook with the "dum" method - seal the pot and cook slowly to trap all the aromas.',
+    'pizza': 'The secret is a blazing hot oven - Neapolitan ovens reach 900°F!',
+    'tofu': 'Press the tofu for 30 minutes to remove moisture for maximum crispiness.',
+    'curry': 'Toast whole spices before grinding for deeper, more complex flavors.'
+  };
+  
+  for (const [key, tip] of Object.entries(tips)) {
+    if (recipeName.toLowerCase().includes(key)) {
+      return tip;
+    }
+  }
+  return 'Patience and love are the most important ingredients in any traditional recipe.';
+};
 
 const App = () => {
   const [recipes, setRecipes] = useState([]);
@@ -21,6 +416,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [apiKeyError, setApiKeyError] = useState(false);
+  const [showCulturalCards, setShowCulturalCards] = useState(false);
 
   // Embedded recipe data - Clean recipes without hardcoded cultural information
   const fallbackRecipes = [
@@ -1009,6 +1405,7 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
     setShowResults(false);
     setApiKeyError(false);
     setLoading(false); // Make sure loading is also reset
+    setShowCulturalCards(false); // Reset cultural cards
   };
 
   return (
@@ -1035,6 +1432,15 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
       </header>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Cultural Story Cards Modal */}
+        {showCulturalCards && selectedRecipe && aiRecommendations?.culturalInfo && (
+          <CulturalStoryCards
+            recipe={selectedRecipe}
+            culturalInfo={aiRecommendations.culturalInfo}
+            onClose={() => setShowCulturalCards(false)}
+          />
+        )}
+
         {/* API Key Setup Notice */}
         {apiKeyError && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8">
@@ -1346,10 +1752,20 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
                 {/* Cultural & Historical Information - Only show if AI provided data */}
                 {aiRecommendations.culturalInfo && (
                   <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg md:col-span-2">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <BookOpen className="h-5 w-5 text-purple-600" />
-                      <h3 className="text-xl font-semibold">Cultural Heritage & History</h3>
-                      <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">🤖 AI Generated</span>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <BookOpen className="h-5 w-5 text-purple-600" />
+                        <h3 className="text-xl font-semibold">Cultural Heritage & History</h3>
+                        <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">🤖 AI Generated</span>
+                      </div>
+                      
+                      {/* Cultural Story Cards Button */}
+                      <button
+                        onClick={() => setShowCulturalCards(true)}
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                      >
+                        📖 Story Cards
+                      </button>
                     </div>
                     
                     <div className="grid md:grid-cols-2 gap-4">
@@ -1426,6 +1842,7 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
           <div className="text-center text-gray-600">
             <p>Built with ❤️ by HumanXAI for foodies</p>
             <p className="mt-2">🔒 Privacy-first design - No data is stored or tracked</p>
+            <p className="mt-2">✨ Featuring Cultural Story Cards - Discover the heritage behind every dish</p>
           </div>
         </div>
       </footer>
