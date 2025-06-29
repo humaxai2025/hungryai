@@ -1,8 +1,8 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import generateCsp from './csp'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import generateCsp from './csp';
 
-const { csp, nonce } = generateCsp()
+const { csp, nonce } = generateCsp();
 
 export default defineConfig({
   plugins: [
@@ -10,7 +10,7 @@ export default defineConfig({
       jsxRuntime: 'automatic',
       babel: {
         plugins: [
-          ['transform-remove-console', { exclude: ['error', 'warn'] }
+          ['transform-remove-console', { exclude: ['error', 'warn'] }]  // Fixed missing closing bracket
         ]
       }
     })
@@ -20,4 +20,4 @@ export default defineConfig({
       "Content-Security-Policy": csp
     }
   }
-})
+});
