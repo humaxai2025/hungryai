@@ -433,40 +433,53 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
       const servingMatch = aiText.match(/SERVING:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
       const tipsMatch = aiText.match(/TIPS:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
       
-      // Extract cooking instructions - improved parsing
-      console.log('🔍 Searching for STEP instructions in AI response...');
-      const instructionMatches = aiText.match(/STEP:\s*([^\n\r]+)/gi);
-      console.log('🔍 Found instruction matches:', instructionMatches);
-      
+      // Enhanced cooking instructions parsing
+      console.log('🔍 Searching for cooking instructions in AI response...');
       let aiInstructions = [];
-      if (instructionMatches && instructionMatches.length > 0) {
-        aiInstructions = instructionMatches.map(match => {
+      
+      // Method 1: Look for STEP: format
+      const stepMatches = aiText.match(/STEP:\s*([^\n\r]+)/gi);
+      if (stepMatches && stepMatches.length > 0) {
+        aiInstructions = stepMatches.map(match => {
           const cleanStep = match.replace(/^STEP:\s*/i, '').trim();
-          console.log('🔍 Parsed step:', cleanStep);
           return cleanStep;
         });
+        console.log('🔍 Found STEP format instructions:', aiInstructions);
       } else {
-        // Fallback: look for numbered steps or any cooking instructions
-        console.log('🔍 No STEP: format found, looking for alternative patterns...');
-        const lines = aiText.split('\n');
-        const instructionLines = lines.filter(line => {
-          const cleanLine = line.trim();
-          return cleanLine.length > 20 && 
-                 (cleanLine.match(/^\d+\./) || 
-                  cleanLine.toLowerCase().includes('cook') ||
-                  cleanLine.toLowerCase().includes('heat') ||
-                  cleanLine.toLowerCase().includes('add') ||
-                  cleanLine.toLowerCase().includes('mix') ||
-                  cleanLine.toLowerCase().includes('stir'));
-        });
-        
-        if (instructionLines.length > 0) {
-          aiInstructions = instructionLines.slice(0, 8).map(line => line.trim());
-          console.log('🔍 Found alternative instructions:', aiInstructions);
+        // Method 2: Look for numbered instructions (1., 2., etc.)
+        const numberedMatches = aiText.match(/\d+\.\s*([^\n\r]+(?:\n(?!\d+\.)[^\n\r]+)*)/gi);
+        if (numberedMatches && numberedMatches.length > 0) {
+          aiInstructions = numberedMatches.map(match => {
+            const cleanStep = match.replace(/^\d+\.\s*/, '').trim();
+            return cleanStep;
+          });
+          console.log('🔍 Found numbered instructions:', aiInstructions);
+        } else {
+          // Method 3: Split by sentences and look for cooking action words
+          const sentences = aiText.split(/[.!?]+/).filter(sentence => {
+            const s = sentence.trim().toLowerCase();
+            return s.length > 20 && (
+              s.includes('heat') || s.includes('add') || s.includes('cook') || 
+              s.includes('stir') || s.includes('mix') || s.includes('bake') || 
+              s.includes('fry') || s.includes('simmer') || s.includes('serve') ||
+              s.includes('remove') || s.includes('place') || s.includes('cover') ||
+              s.includes('reduce') || s.includes('boil') || s.includes('pour')
+            );
+          });
+          
+          if (sentences.length > 0) {
+            // Take up to 8 cooking sentences and clean them up
+            aiInstructions = sentences.slice(0, 8).map(sentence => {
+              return sentence.trim().charAt(0).toUpperCase() + sentence.trim().slice(1);
+            });
+            console.log('🔍 Found sentence-based instructions:', aiInstructions);
+          }
         }
       }
 
-      console.log('🤖 Final AI instructions array:', aiInstructions);
+      // Final cleanup and validation
+      aiInstructions = aiInstructions.filter(step => step && step.length > 10).slice(0, 10);
+      console.log('🤖 Final cleaned AI instructions:', aiInstructions);
 
       const results = {
         prepTime: prepMatch ? Math.max(15, Math.min(120, parseInt(prepMatch[1]))) : estimatePrepTime(ingredients.length),
@@ -493,7 +506,7 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
             ratio: '1:1'
           }
         ],
-        // AI-Generated Instructions - Enhanced
+        // AI-Generated Instructions - Enhanced with better parsing
         aiInstructions: aiInstructions.length > 0 ? aiInstructions : null,
         // 100% AI-Generated Cultural Information
         culturalInfo: originMatch || historyMatch || culturalMatch || seasonMatch || servingMatch || tipsMatch ? {
@@ -506,7 +519,7 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
         } : null // No cultural info if AI didn't provide it
       };
 
-      console.log('🤖 Final parsed results:', results);
+      console.log('🤖 Final parsed results with instructions:', results);
       return { success: true, data: results };
     } catch (error) {
       console.error('Error parsing Gemini response:', error);
