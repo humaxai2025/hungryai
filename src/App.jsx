@@ -995,7 +995,7 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
             {/* Hero Section */}
             <div className="text-center mb-12">
               <h1 className="text-6xl font-bold text-gray-800 mb-4">
-                Hungry??
+                What's Cooking Today?
               </h1>
               <p className="text-xl text-gray-600 mb-8">
                 Tell us what you want to eat, and we'll find the perfect recipe with AI-powered insights!
