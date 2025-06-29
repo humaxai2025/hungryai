@@ -11,7 +11,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: false,
+    sourcemap: false, // disables source map eval in prod
     minify: 'esbuild',
     rollupOptions: {
       output: {
