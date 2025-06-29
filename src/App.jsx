@@ -830,7 +830,6 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
       return null;
     }
   };
-  // (This misplaced code block is removed to fix the syntax error)
 
   // CSP-compliant URL creation helper
   const createSearchUrl = (searchTerm) => {
@@ -911,13 +910,13 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
     setApiKeyError(false);
   };
 
- return (
+  return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div
+            <div 
               className="flex items-center space-x-2 cursor-pointer"
               onClick={resetToHome}
             >
@@ -925,10 +924,10 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
               <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 FlavorAI
               </span>
-            </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Sparkles className="h-4 w-4" />
-              <span>AI-Powered Recipe Discovery</span>
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <Sparkles className="h-4 w-4" />
+                <span>AI-Powered Recipe Discovery</span>
+              </div>
             </div>
           </div>
         </div>
@@ -941,101 +940,37 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
             <div className="flex items-start space-x-3">
               <AlertCircle className="h-6 w-6 text-amber-600 mt-0.5" />
               <div>
-                <h3 className="text-lg font-semibold text-amber-800 mb-2">
-                  Real AI Required - Setup Instructions
-                </h3>
+                <h3 className="text-lg font-semibold text-amber-800 mb-2">Real AI Required - Setup Instructions</h3>
                 <div className="text-amber-700 space-y-3">
                   <div className="bg-white/50 rounded-lg p-4">
-                    <h4 className="font-semibold text-amber-800 mb-2">
-                      🚀 Option 1: Google Gemini (Recommended - Most Reliable)
-                    </h4>
+                    <h4 className="font-semibold text-amber-800 mb-2">🚀 Option 1: Google Gemini (Recommended - Most Reliable)</h4>
                     <ol className="list-decimal list-inside space-y-1 ml-2 text-sm">
-                      <li>
-                        Go to{' '}
-                        <a
-                          href="https://makersuite.google.com/app/apikey"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 underline"
-                        >
-                          Google AI Studio
-                        </a>
-                      </li>
+                      <li>Go to <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Google AI Studio</a></li>
                       <li>Click "Create API Key" (free with generous limits)</li>
-                      <li>
-                        Add{' '}
-                        <code className="bg-amber-100 px-2 py-1 rounded">
-                          VITE_GEMINI_API_KEY=your_key_here
-                        </code>{' '}
-                        to your .env file
-                      </li>
+                      <li>Add <code className="bg-amber-100 px-2 py-1 rounded">VITE_GEMINI_API_KEY=your_key_here</code> to your .env file</li>
                     </ol>
                   </div>
-
+                  
                   <div className="bg-white/50 rounded-lg p-4">
-                    <h4 className="font-semibold text-amber-800 mb-2">
-                      🎨 Option 2: OpenAI DALL-E (For AI Images)
-                    </h4>
+                    <h4 className="font-semibold text-amber-800 mb-2">🎨 Option 2: OpenAI DALL-E (For AI Images)</h4>
                     <ol className="list-decimal list-inside space-y-1 ml-2 text-sm">
-                      <li>
-                        Go to{' '}
-                        <a
-                          href="https://platform.openai.com/api-keys"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 underline"
-                        >
-                          OpenAI API Keys
-                        </a>
-                      </li>
+                      <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">OpenAI API Keys</a></li>
                       <li>Create API Key (pay-per-use, ~$0.04 per image)</li>
-                      <li>
-                        Add{' '}
-                        <code className="bg-amber-100 px-2 py-1 rounded">
-                          VITE_OPENAI_API_KEY=your_openai_key
-                        </code>{' '}
-                        to your .env file
-                      </li>
+                      <li>Add <code className="bg-amber-100 px-2 py-1 rounded">VITE_OPENAI_API_KEY=your_openai_key</code> to your .env file</li>
                     </ol>
                   </div>
-
+                  
                   <div className="bg-white/50 rounded-lg p-4">
-                    <h4 className="font-semibold text-amber-800 mb-2">
-                      🔄 Option 3: Hugging Face (Backup for Analysis + Free Images)
-                    </h4>
+                    <h4 className="font-semibold text-amber-800 mb-2">🔄 Option 3: Hugging Face (Backup for Analysis + Free Images)</h4>
                     <ol className="list-decimal list-inside space-y-1 ml-2 text-sm">
-                      <li>
-                        Go to{' '}
-                        <a
-                          href="https://huggingface.co/join"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 underline"
-                        >
-                          huggingface.co
-                        </a>{' '}
-                        and create a free account
-                      </li>
-                      <li>
-                        Go to Settings → Access Tokens and create a new token
-                      </li>
-                      <li>
-                        Add{' '}
-                        <code className="bg-amber-100 px-2 py-1 rounded">
-                          VITE_HF_API_KEY=hf_your_token_here
-                        </code>{' '}
-                        to your .env file
-                      </li>
+                      <li>Go to <a href="https://huggingface.co/join" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">huggingface.co</a> and create a free account</li>
+                      <li>Go to Settings → Access Tokens and create a new token</li>
+                      <li>Add <code className="bg-amber-100 px-2 py-1 rounded">VITE_HF_API_KEY=hf_your_token_here</code> to your .env file</li>
                     </ol>
                   </div>
-
-                  <p className="text-sm font-semibold">
-                    ⚡ Restart the development server after adding API keys
-                  </p>
-                  <p className="text-xs">
-                    🎯 <strong>Recommended combo:</strong> Gemini (analysis) +
-                    OpenAI (images) for best results!
-                  </p>
+                  
+                  <p className="text-sm font-semibold">⚡ Restart the development server after adding API keys</p>
+                  <p className="text-xs">🎯 <strong>Recommended combo:</strong> Gemini (analysis) + OpenAI (images) for best results!</p>
                 </div>
               </div>
             </div>
@@ -1051,9 +986,7 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
           <div className="text-center py-16">
             <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-2xl mx-auto">
               <p className="text-red-600 text-lg">{recipesError}</p>
-              <p className="text-gray-600 mt-2">
-                Using embedded recipes for demonstration.
-              </p>
+              <p className="text-gray-600 mt-2">Using embedded recipes for demonstration.</p>
             </div>
           </div>
         ) : !selectedRecipe ? (
@@ -1063,8 +996,7 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
                 What's Cooking?
               </h1>
               <p className="text-xl text-gray-600 mb-8">
-                Tell us what you want to eat, and we'll find the perfect recipe
-                with AI-powered insights!
+                Tell us what you want to eat, and we'll find the perfect recipe with AI-powered insights!
               </p>
               {/* Search Box */}
               <div className="relative max-w-2xl mx-auto">
@@ -1096,15 +1028,10 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
                             <p className="text-sm text-gray-600 line-clamp-2">{recipe.descripition}</p>
                             <div className="mt-2">
                               <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                                {recipe.collection.includes('vegan')
-                                  ? 'Vegan'
-                                  : recipe.collection.includes('indian')
-                                  ? 'Indian'
-                                  : recipe.collection.includes('italian')
-                                  ? 'Italian'
-                                  : recipe.collection.includes('asian')
-                                  ? 'Asian'
-                                  : 'Healthy'} Recipe
+                                {recipe.collection.includes('vegan') ? 'Vegan' : 
+                                 recipe.collection.includes('indian') ? 'Indian' :
+                                 recipe.collection.includes('italian') ? 'Italian' :
+                                 recipe.collection.includes('asian') ? 'Asian' : 'Healthy'} Recipe
                               </span>
                             </div>
                           </div>
@@ -1118,53 +1045,277 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
                 )}
                 {showResults && searchResults.length === 0 && searchQuery.trim() && (
                   <div className="absolute top-full mt-2 w-full bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-10">
-                    <p className="text-gray-600 text-center">
-                      No recipes found. Try different keywords!
-                    </p>
+                    <p className="text-gray-600 text-center">No recipes found. Try different keywords!</p>
                   </div>
                 )}
               </div>
             </div>
           </div>
         ) : (
+          /* Recipe Details & AI Recommendations */
           <div className="space-y-8">
+            {/* Back Button */}
             <button
               onClick={resetToHome}
               className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-800 transition-colors"
             >
               <span>← Back to search</span>
             </button>
-            <div className="bg-white/80 backdrop-blur-md rounded-2xl p-8 shadow-lg">
-              <h1 className="text-4xl font-bold text-gray-800 mb-4">
-                {selectedRecipe.name}
-              </h1>
-              <p className="text-lg text-gray-600 mb-6">
-                {selectedRecipe.descripition}
-              </p>
 
-              {/* Full, AI-generated or fallback recipe display */}
+            {/* Recipe Header */}
+            <div className="bg-white/80 backdrop-blur-md rounded-2xl p-8 shadow-lg">
+              <h1 className="text-4xl font-bold text-gray-800 mb-4">{selectedRecipe.name}</h1>
+              <p className="text-lg text-gray-600 mb-6">{selectedRecipe.descripition}</p>
+              
+              {/* Recipe Image - Original or AI-generated */}
+              {selectedRecipe.image ? (
+                <img 
+                  src={selectedRecipe.image} 
+                  alt={selectedRecipe.name}
+                  className="w-full h-64 object-cover rounded-xl mb-6"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              ) : aiRecommendations?.aiImage ? (
+                <div className="relative">
+                  <img 
+                    src={aiRecommendations.aiImage} 
+                    alt={`AI-generated ${selectedRecipe.name}`}
+                    className="w-full h-64 object-cover rounded-xl mb-6"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                  <div className="absolute top-2 right-2 bg-purple-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                    🤖 AI Generated
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full h-64 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl mb-6 flex items-center justify-center">
+                  <div className="text-center">
+                    <ChefHat className="h-20 w-20 text-indigo-600 mx-auto mb-4" />
+                    <p className="text-indigo-800 font-semibold">{selectedRecipe.name}</p>
+                    {loading && <p className="text-xs text-indigo-600 mt-2">🎨 Generating AI image...</p>}
+                  </div>
+                </div>
+              )}
+              
+              {/* Complete Ingredients List */}
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                  <BookOpen className="h-5 w-5 text-indigo-600 mr-2" />
-                  Complete Step-by-Step Recipe
+                  <Utensils className="h-5 w-5 text-indigo-600 mr-2" />
+                  Ingredients ({parseIngredients(selectedRecipe.ingredients).length} items)
                 </h3>
                 <div className="bg-gray-50 rounded-xl p-4">
-                  {loading ? (
-                    <p className="text-indigo-600">Loading full recipe...</p>
-                  ) : aiRecommendations?.fullRecipe ? (
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: aiRecommendations.fullRecipe,
-                      }}
-                    />
-                  ) : (
-                    <p className="text-gray-500">Recipe not available.</p>
-                  )}
+                  <div className="grid md:grid-cols-2 gap-2">
+                    {parseIngredients(selectedRecipe.ingredients).map((ingredient, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start space-x-2 py-2 border-b border-gray-200 last:border-b-0"
+                      >
+                        <span className="text-indigo-600 font-semibold text-sm min-w-[24px]">
+                          {index + 1}.
+                        </span>
+                        <span className="text-gray-700 text-sm flex-1">
+                          {ingredient}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* ...The rest of your panels (nutrition, cultural, etc.) can go here... */}
+              {/* Recipe Steps */}
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                  <Clock className="h-5 w-5 text-green-600 mr-2" />
+                  Instructions
+                </h3>
+                <div className="bg-green-50 rounded-xl p-4">
+                  <div className="space-y-3">
+                    {(() => {
+                      try {
+                        // Safe parsing of steps
+                        const stepsStr = selectedRecipe.steps.replace(/^\[|\]$/g, '');
+                        const steps = stepsStr.split('\', \'').map(step => 
+                          step.replace(/^\'|\'$/g, '').replace(/^\"|\"$/g, '')
+                        );
+                        return steps.map((step, index) => (
+                          <div key={index} className="flex items-start space-x-3">
+                            <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold min-w-[24px]">
+                              {index + 1}
+                            </span>
+                            <p className="text-gray-700 text-sm flex-1 leading-relaxed">
+                              {step}
+                            </p>
+                          </div>
+                        ));
+                      } catch (error) {
+                        return (
+                          <p className="text-gray-600 text-sm">
+                            Cooking instructions available - see recipe source for detailed steps.
+                          </p>
+                        );
+                      }
+                    })()}
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {/* AI Recommendations */}
+            {loading ? (
+              <div className="bg-white/80 backdrop-blur-md rounded-2xl p-8 shadow-lg">
+                <div className="flex items-center justify-center space-x-2">
+                  <Sparkles className="h-6 w-6 text-indigo-600 animate-spin" />
+                  <span className="text-lg text-gray-600">AI is analyzing your recipe...</span>
+                </div>
+              </div>
+            ) : aiRecommendations ? (
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Status indicator */}
+                {aiRecommendations.message && (
+                  <div className={`md:col-span-2 ${aiRecommendations.aiGenerated ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'} border rounded-xl p-4`}>
+                    <div className="flex items-center space-x-2">
+                      <Sparkles className={`h-5 w-5 ${aiRecommendations.aiGenerated ? 'text-green-600' : 'text-blue-600'}`} />
+                      <span className={aiRecommendations.aiGenerated ? 'text-green-800' : 'text-blue-800'}>{aiRecommendations.message}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Preparation Time & Nutrition */}
+                <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Clock className="h-5 w-5 text-indigo-600" />
+                    <h3 className="text-xl font-semibold">Preparation Time</h3>
+                    {!aiRecommendations.aiGenerated && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Smart Estimate</span>}
+                  </div>
+                  <p className="text-3xl font-bold text-indigo-600">{aiRecommendations.prepTime} min</p>
+                </div>
+
+                <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Apple className="h-5 w-5 text-green-600" />
+                    <h3 className="text-xl font-semibold">Nutritional Value</h3>
+                    {!aiRecommendations.aiGenerated && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Smart Estimate</span>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>Calories: <span className="font-semibold">{aiRecommendations.nutrition.calories}</span></div>
+                    <div>Protein: <span className="font-semibold">{aiRecommendations.nutrition.protein}g</span></div>
+                    <div>Carbs: <span className="font-semibold">{aiRecommendations.nutrition.carbs}g</span></div>
+                    <div>Fat: <span className="font-semibold">{aiRecommendations.nutrition.fat}g</span></div>
+                  </div>
+                </div>
+
+                {/* Alternate Ingredients */}
+                <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg md:col-span-2">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Utensils className="h-5 w-5 text-orange-600" />
+                    <h3 className="text-xl font-semibold">Alternate Ingredients</h3>
+                  </div>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {aiRecommendations.alternateIngredients.map((alt, index) => (
+                      <div key={index} className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-sm text-gray-600">Instead of <strong>{alt.original}</strong></p>
+                        <p className="font-semibold text-gray-800">{alt.substitute}</p>
+                        <p className="text-xs text-gray-500">Ratio: {alt.ratio}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Cultural & Historical Information - Only show if AI provided data */}
+                {aiRecommendations.culturalInfo && (
+                  <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg md:col-span-2">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <BookOpen className="h-5 w-5 text-purple-600" />
+                      <h3 className="text-xl font-semibold">Cultural Heritage & History</h3>
+                      <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">🤖 AI Generated</span>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {/* Origin & History */}
+                      <div className="space-y-4">
+                        <div className="bg-purple-50 rounded-lg p-4">
+                          <h4 className="font-semibold text-purple-800 mb-2 flex items-center">
+                            🌍 Origin
+                          </h4>
+                          <p className="text-purple-700 text-sm">{aiRecommendations.culturalInfo.origin}</p>
+                        </div>
+                        
+                        <div className="bg-blue-50 rounded-lg p-4">
+                          <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
+                            📜 History
+                          </h4>
+                          <p className="text-blue-700 text-sm">{aiRecommendations.culturalInfo.history}</p>
+                        </div>
+                        
+                        <div className="bg-amber-50 rounded-lg p-4">
+                          <h4 className="font-semibold text-amber-800 mb-2 flex items-center">
+                            🎭 Cultural Significance
+                          </h4>
+                          <p className="text-amber-700 text-sm">{aiRecommendations.culturalInfo.significance}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Traditional Context */}
+                      <div className="space-y-4">
+                        <div className="bg-green-50 rounded-lg p-4">
+                          <h4 className="font-semibold text-green-800 mb-2 flex items-center">
+                            🌸 Traditional Season
+                          </h4>
+                          <p className="text-green-700 text-sm">{aiRecommendations.culturalInfo.season}</p>
+                        </div>
+                        
+                        <div className="bg-rose-50 rounded-lg p-4">
+                          <h4 className="font-semibold text-rose-800 mb-2 flex items-center">
+                            🍽️ Traditional Serving
+                          </h4>
+                          <p className="text-rose-700 text-sm">{aiRecommendations.culturalInfo.serving}</p>
+                        </div>
+                        
+                        <div className="bg-indigo-50 rounded-lg p-4">
+                          <h4 className="font-semibold text-indigo-800 mb-2 flex items-center">
+                            💡 Cultural Cooking Tips
+                          </h4>
+                          <p className="text-indigo-700 text-sm">{aiRecommendations.culturalInfo.tips}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Message when no cultural info available */}
+                {!aiRecommendations.culturalInfo ? (
+                  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 md:col-span-2">
+                    <div className="flex items-center justify-center space-x-2 text-gray-600">
+                      <BookOpen className="h-5 w-5" />
+                      <p>🤖 Cultural information will be provided by AI when API keys are configured</p>
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Article Link */}
+                {/* You can add an article or video link here if desired */}
+                <div className="md:col-span-2 flex flex-col md:flex-row gap-4">
+                  <a
+                    href={aiRecommendations.articleUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors w-full md:w-auto"
+                  >
+                    <BookOpen className="h-5 w-5 mr-2" />
+                    Learn More (Google)
+                  </a>
+                  <a
+                    href={createYouTubeUrl(selectedRecipe.name + ' recipe')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors w-full md:w-auto"
+                  >
+                    <span className="mr-2">▶️</span>
+                    Watch on YouTube
+                  </a>
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
       </div>
@@ -1181,6 +1332,5 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
     </div>
   );
 };
-
 
 export default App;
