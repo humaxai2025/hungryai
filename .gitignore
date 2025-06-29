@@ -1,0 +1,86 @@
+# Dependency directories
+node_modules/
+.pnp
+.pnp.js
+
+# Build files
+dist/
+.vite/
+.vercel/
+
+# Cache
+*.local
+.cache/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Debug logs
+debug.log
+
+# Vite specific
+*.env
+.env.production
+.env.development
+
+# Babel cache
+.babel-cache/
+
+# ESLint cache
+.eslintcache
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Vercel specific
+.vercel_build_output/
+.vercel/
+
+# System Files
+*.DS_Store
+*.swp
+*.swo
+
+# CSP nonce files (if generated)
+csp-nonce.txt
+
+# Local development files
+*.local
+*.bak
+*.tmp
+
+# Build analysis files
+stats.html
