@@ -500,20 +500,37 @@ const App = () => {
       setRecipesLoading(true);
       
       try {
-        // Try to fetch from public data file
-        const response = await fetch('/data/recipe.json');
+        // Try to fetch from new primary data file
+        console.log('🔍 Loading recipes from titles_only.json...');
+        const response = await fetch('/data/titles_only.json');
         if (response.ok) {
           const fetchedData = await response.json();
+          console.log('✅ Successfully loaded', fetchedData.length, 'recipes from titles_only.json');
           setRecipes(fetchedData);
           setRecipesError(null);
         } else {
-          throw new Error('Failed to load external recipes');
+          throw new Error('Failed to load titles_only.json');
         }
       } catch (error) {
-        console.log('Using embedded recipes with rich cultural context:', error.message);
-        // Use embedded fallback recipes with cultural information
-        setRecipes(fallbackRecipes);
-        setRecipesError(null);
+        console.log('⚠️ Failed to load titles_only.json, trying recipe.json fallback:', error.message);
+        
+        try {
+          // Fallback to original recipe.json
+          const fallbackResponse = await fetch('/data/recipe.json');
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            console.log('✅ Successfully loaded', fallbackData.length, 'recipes from recipe.json fallback');
+            setRecipes(fallbackData);
+            setRecipesError(null);
+          } else {
+            throw new Error('Both titles_only.json and recipe.json failed to load');
+          }
+        } catch (fallbackError) {
+          console.log('⚠️ All external sources failed, using embedded recipes:', fallbackError.message);
+          // Use embedded fallback recipes with cultural information
+          setRecipes(fallbackRecipes);
+          setRecipesError(null);
+        }
       } finally {
         setRecipesLoading(false);
       }
