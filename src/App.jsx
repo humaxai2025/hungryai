@@ -344,7 +344,7 @@ const App = () => {
   // Google Gemini AI Analysis (Primary - Most Reliable) - 100% AI Generated
   const performGeminiAnalysis = async (recipe, ingredients, apiKey) => {
     try {
-      const prompt = `Analyze this recipe and provide detailed information. Research the cultural background and provide authentic information:
+      const prompt = `Analyze this recipe and provide detailed cooking instructions along with cultural information:
 
 Recipe: ${recipe.name}
 Description: ${recipe.descripition}
@@ -365,11 +365,17 @@ CULTURAL: [cultural significance, traditions, and symbolism in the origin cultur
 SEASON: [traditional season, festivals, or occasions when this dish is eaten]
 SERVING: [authentic traditional way this dish is served in its culture of origin]
 TIPS: [authentic cultural cooking tips and traditional techniques from the culture]
-INSTRUCTIONS: [step-by-step cooking instructions, each step on a new line starting with "STEP:"]
-STEP: [First cooking step with specific techniques and timing]
-STEP: [Second cooking step with specific techniques and timing]
+
+COOKING_INSTRUCTIONS:
+Please provide detailed step-by-step cooking instructions. Each step should start with "STEP:" and include specific techniques, temperatures, timing, and traditional methods:
+
+STEP: [First detailed cooking step with prep work, temperatures, and timing]
+STEP: [Second step with specific cooking techniques and visual cues]
+STEP: [Third step with traditional methods and tips]
 STEP: [Continue with all necessary cooking steps]
-STEP: [Final step with serving suggestions]`;
+STEP: [Final step with plating and serving suggestions]
+
+Make sure to include at least 5-8 detailed cooking steps with traditional techniques and authentic preparation methods.`;
 
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
         method: 'POST',
@@ -381,10 +387,10 @@ STEP: [Final step with serving suggestions]`;
             parts: [{ text: prompt }]
           }],
           generationConfig: {
-            temperature: 0.3, // Lower temperature for more factual information
+            temperature: 0.4, // Slightly higher for more detailed instructions
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 3000, // More tokens for detailed instructions
           }
         })
       });
@@ -397,7 +403,7 @@ STEP: [Final step with serving suggestions]`;
       const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
       if (aiText) {
-        console.log('🤖 Gemini cultural analysis response:', aiText);
+        console.log('🤖 Gemini full response:', aiText);
         return parseGeminiResponse(aiText, ingredients, recipe);
       }
 
@@ -431,11 +437,40 @@ STEP: [Final step with serving suggestions]`;
       const servingMatch = aiText.match(/SERVING:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
       const tipsMatch = aiText.match(/TIPS:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
       
-      // Extract cooking instructions
-      const instructionMatches = aiText.match(/STEP:\s*([^\n\r]+(?:\n(?!STEP:)[^\n\r]+)*)/gi);
-      const aiInstructions = instructionMatches ? 
-        instructionMatches.map(match => match.replace(/^STEP:\s*/i, '').trim()) : 
-        [];
+      // Extract cooking instructions - improved parsing
+      console.log('🔍 Searching for STEP instructions in AI response...');
+      const instructionMatches = aiText.match(/STEP:\s*([^\n\r]+)/gi);
+      console.log('🔍 Found instruction matches:', instructionMatches);
+      
+      let aiInstructions = [];
+      if (instructionMatches && instructionMatches.length > 0) {
+        aiInstructions = instructionMatches.map(match => {
+          const cleanStep = match.replace(/^STEP:\s*/i, '').trim();
+          console.log('🔍 Parsed step:', cleanStep);
+          return cleanStep;
+        });
+      } else {
+        // Fallback: look for numbered steps or any cooking instructions
+        console.log('🔍 No STEP: format found, looking for alternative patterns...');
+        const lines = aiText.split('\n');
+        const instructionLines = lines.filter(line => {
+          const cleanLine = line.trim();
+          return cleanLine.length > 20 && 
+                 (cleanLine.match(/^\d+\./) || 
+                  cleanLine.toLowerCase().includes('cook') ||
+                  cleanLine.toLowerCase().includes('heat') ||
+                  cleanLine.toLowerCase().includes('add') ||
+                  cleanLine.toLowerCase().includes('mix') ||
+                  cleanLine.toLowerCase().includes('stir'));
+        });
+        
+        if (instructionLines.length > 0) {
+          aiInstructions = instructionLines.slice(0, 8).map(line => line.trim());
+          console.log('🔍 Found alternative instructions:', aiInstructions);
+        }
+      }
+
+      console.log('🤖 Final AI instructions array:', aiInstructions);
 
       const results = {
         prepTime: prepMatch ? Math.max(15, Math.min(120, parseInt(prepMatch[1]))) : estimatePrepTime(ingredients.length),
@@ -462,7 +497,7 @@ STEP: [Final step with serving suggestions]`;
             ratio: '1:1'
           }
         ],
-        // AI-Generated Instructions
+        // AI-Generated Instructions - Enhanced
         aiInstructions: aiInstructions.length > 0 ? aiInstructions : null,
         // 100% AI-Generated Cultural Information
         culturalInfo: originMatch || historyMatch || culturalMatch || seasonMatch || servingMatch || tipsMatch ? {
@@ -475,6 +510,7 @@ STEP: [Final step with serving suggestions]`;
         } : null // No cultural info if AI didn't provide it
       };
 
+      console.log('🤖 Final parsed results:', results);
       return { success: true, data: results };
     } catch (error) {
       console.error('Error parsing Gemini response:', error);
@@ -648,16 +684,19 @@ STEP: [Final step with serving suggestions]`;
       try {
         console.log(`🔄 Trying ${model.split('/')[1]}...`);
         
-        // Enhanced prompt for cultural information
+        // Enhanced prompt for cultural information and cooking instructions
         const culturalPrompt = `Recipe: ${recipe.name}. Ingredients: ${ingredients.slice(0, 5).join(', ')}. 
         
-        Provide analysis including:
-        - Preparation time (minutes)
+        Provide detailed analysis including:
+        - Step-by-step cooking instructions (numbered 1, 2, 3...)
+        - Preparation time in minutes
         - Calories per serving  
         - Country/region of origin
         - Brief history and cultural significance
         - Traditional serving method
-        - Authentic cooking tips`;
+        - Authentic cooking tips
+
+        Please provide detailed cooking steps with specific techniques and timing.`;
         
         const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
           method: 'POST',
@@ -668,8 +707,8 @@ STEP: [Final step with serving suggestions]`;
           body: JSON.stringify({
             inputs: culturalPrompt,
             parameters: {
-              max_new_tokens: 200, // More tokens for cultural info
-              temperature: 0.3,    // Lower temperature for factual info
+              max_new_tokens: 300, // More tokens for detailed instructions
+              temperature: 0.4,    // Balanced for detailed but accurate info
               do_sample: true
             },
             options: {
@@ -701,7 +740,7 @@ STEP: [Final step with serving suggestions]`;
   // Enhance estimates with HF response - Extract Cultural Info from AI
   const enhanceWithHFResponse = (recipe, ingredients, hfResult) => {
     try {
-      // Use AI response to get cultural information
+      // Use AI response to get cultural information and cooking instructions
       let aiText = '';
       if (Array.isArray(hfResult) && hfResult[0]) {
         aiText = hfResult[0].generated_text || hfResult[0].summary_text || '';
@@ -711,6 +750,23 @@ STEP: [Final step with serving suggestions]`;
 
       console.log('🤖 Processing HF cultural response:', aiText);
 
+      // Extract cooking instructions from HF response
+      const instructionLines = aiText.split('\n').filter(line => {
+        const cleanLine = line.trim();
+        return cleanLine.length > 15 && 
+               (cleanLine.match(/^\d+\./) || 
+                cleanLine.toLowerCase().includes('cook') ||
+                cleanLine.toLowerCase().includes('heat') ||
+                cleanLine.toLowerCase().includes('add') ||
+                cleanLine.toLowerCase().includes('mix') ||
+                cleanLine.toLowerCase().includes('stir') ||
+                cleanLine.toLowerCase().includes('bake') ||
+                cleanLine.toLowerCase().includes('fry'));
+      });
+
+      const aiInstructions = instructionLines.length > 0 ? instructionLines.slice(0, 6) : null;
+      console.log('🤖 HF extracted instructions:', aiInstructions);
+
       // Extract any numbers from AI response to enhance estimates
       const numbers = aiText.match(/\d+/g) || [];
       
@@ -718,6 +774,7 @@ STEP: [Final step with serving suggestions]`;
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
+        aiInstructions: aiInstructions, // Include AI instructions from HF
         culturalInfo: extractCulturalInfoFromAI(aiText, recipe.name)
       };
 
@@ -744,6 +801,7 @@ STEP: [Final step with serving suggestions]`;
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
+        aiInstructions: null, // No AI instructions if processing fails
         culturalInfo: null // No cultural info if AI processing fails
       };
     }
@@ -1129,27 +1187,19 @@ STEP: [Final step with serving suggestions]`;
                   Instructions
                 </h3>
                 
-                {/* AI Status Message Above Instructions */}
-                {aiRecommendations?.message && (
-                  <div className={`mb-4 ${aiRecommendations.aiGenerated ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'} border rounded-xl p-4`}>
-                    <div className="flex items-center space-x-2">
-                      <Sparkles className={`h-5 w-5 ${aiRecommendations.aiGenerated ? 'text-green-600' : 'text-blue-600'}`} />
-                      <span className={aiRecommendations.aiGenerated ? 'text-green-800' : 'text-blue-800'}>{aiRecommendations.message}</span>
-                    </div>
-                  </div>
-                )}
-                
                 <div className="bg-green-50 rounded-xl p-4">
                   <div className="space-y-3">
                     {(() => {
                       // Use AI-generated instructions if available, otherwise fall back to original
                       if (aiRecommendations?.aiInstructions && aiRecommendations.aiInstructions.length > 0) {
+                        console.log('🤖 Displaying AI-generated instructions:', aiRecommendations.aiInstructions);
                         return aiRecommendations.aiInstructions.map((step, index) => (
                           <div key={index} className="flex items-start space-x-3">
                             <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold min-w-[24px]">
                               {index + 1}
                             </span>
                             <p className="text-gray-700 text-sm flex-1 leading-relaxed">
+                              <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full mr-2 mb-1">🤖 AI Enhanced</span>
                               {step}
                             </p>
                           </div>
@@ -1182,6 +1232,26 @@ STEP: [Final step with serving suggestions]`;
                     })()}
                   </div>
                 </div>
+                
+                {/* AI Status Message Below Instructions */}
+                {aiRecommendations?.message && (
+                  <div className={`mt-4 ${aiRecommendations.aiGenerated ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'} border rounded-xl p-4`}>
+                    <div className="flex items-center space-x-2">
+                      <Sparkles className={`h-5 w-5 ${aiRecommendations.aiGenerated ? 'text-green-600' : 'text-blue-600'}`} />
+                      <span className={aiRecommendations.aiGenerated ? 'text-green-800' : 'text-blue-800'}>{aiRecommendations.message}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Message when no AI instructions are available */}
+                {!loading && (!aiRecommendations?.aiInstructions || aiRecommendations?.aiInstructions?.length === 0) && (
+                  <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-5 w-5 text-amber-600" />
+                      <span className="text-amber-800">💡 Configure AI to get detailed, traditional cooking instructions with techniques and timing</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
