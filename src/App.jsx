@@ -15,13 +15,13 @@ const App = () => {
   const [showResults, setShowResults] = useState(false);
   const [apiKeyError, setApiKeyError] = useState(false);
 
-  // Embedded recipe data to avoid CSP issues
+  // Embedded recipe data to avoid CSP issues - using data URLs for reliable images
   const fallbackRecipes = [
     {
       "name": "Paneer Biryani",
       "collection": "collection/indian-recipes/",
       "recipie_collection_idx": 1,
-      "image": "https://images.unsplash.com/photo-1563379091339-03246963d76a?w=400",
+      "image": null, // Removed problematic external image
       "descripition": "A fragrant and flavorful rice dish with marinated paneer, aromatic spices, and basmati rice layered to perfection.",
       "ingredients": "['2 cups basmati rice', '250g paneer cubes', '1 large onion sliced', '1/2 cup yogurt', '2 tbsp ginger-garlic paste', '1 tsp red chili powder', '1/2 tsp turmeric', '1 tsp garam masala', '4-5 green cardamom', '2 bay leaves', '1 cinnamon stick', 'Saffron soaked in milk', 'Fresh mint leaves', 'Fried onions', 'Ghee', 'Salt to taste']",
       "steps": "['Soak basmati rice for 30 minutes', 'Marinate paneer with yogurt, ginger-garlic paste, and spices', 'Fry onions until golden brown', 'Cook rice until 70% done with whole spices', 'Layer marinated paneer, rice, fried onions, mint, and saffron milk', 'Cook on high heat for 2 minutes, then simmer for 45 minutes', 'Let it rest for 10 minutes before serving']",
@@ -31,7 +31,7 @@ const App = () => {
       "name": "Chickpea & Potato Curry",
       "collection": "collection/vegan-recipes/",
       "recipie_collection_idx": 2,
-      "image": "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400",
+      "image": null,
       "descripition": "A classic Indian chickpea curry made with aromatic spices, tender potatoes, and rich tomato-based gravy.",
       "ingredients": "['1 tablespoon canola oil', '1 medium onion chopped', '2 garlic cloves minced', '2 teaspoons minced fresh gingerroot', '2 teaspoons ground coriander', '1 teaspoon garam masala', '1 teaspoon chili powder', '1/2 teaspoon salt', '1/2 teaspoon ground cumin', '1/4 teaspoon ground turmeric', '1 can crushed tomatoes', '2 cans chickpeas drained', '1 large baking potato cubed', '2-1/2 cups vegetable stock', '1 tablespoon lime juice', 'Fresh cilantro', 'Cooked rice']",
       "steps": "['Heat oil in large skillet over medium-high heat', 'Saute onion until tender 2-4 minutes', 'Add garlic ginger and dry seasonings cook 1 minute', 'Stir in tomatoes transfer to slow cooker', 'Add chickpeas potato and stock', 'Cook covered on low 6-8 hours until potato tender', 'Stir in lime juice sprinkle with cilantro', 'Serve with rice']",
@@ -41,7 +41,7 @@ const App = () => {
       "name": "Crispy Tofu with Black Pepper Sauce",
       "collection": "collection/vegan-recipes/",
       "recipie_collection_idx": 3,
-      "image": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400",
+      "image": null,
       "descripition": "Crispy golden tofu cubes tossed in a savory black pepper sauce with fresh vegetables.",
       "ingredients": "['2 tablespoons reduced-sodium soy sauce', '2 tablespoons chili garlic sauce', '1 tablespoon packed brown sugar', '1 tablespoon rice vinegar', '4 green onions', '8 ounces extra-firm tofu drained', '3 tablespoons cornstarch', '6 tablespoons canola oil divided', '8 ounces fresh sugar snap peas', '1 teaspoon freshly ground pepper', '3 garlic cloves minced', '2 teaspoons grated fresh gingerroot']",
       "steps": "['Mix soy sauce chili garlic sauce brown sugar and rice vinegar', 'Mince white parts of green onions slice green parts', 'Cut tofu into cubes pat dry toss with cornstarch', 'Heat 4 tablespoons oil cook tofu until crisp 5-7 minutes', 'Remove tofu drain on paper towels', 'Heat 1 tablespoon oil stir-fry peas until crisp-tender', 'Heat remaining oil cook pepper 30 seconds', 'Add garlic ginger minced onions stir-fry 30-45 seconds', 'Add sauce mixture cook until thickened', 'Stir in tofu and peas sprinkle with sliced onions']",
@@ -51,7 +51,7 @@ const App = () => {
       "name": "Margherita Pizza",
       "collection": "collection/italian-recipes/",
       "recipie_collection_idx": 4,
-      "image": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400",
+      "image": null,
       "descripition": "Classic Italian pizza with fresh tomatoes, mozzarella, and basil on a crispy thin crust.",
       "ingredients": "['1 pizza dough ball', '1/2 cup pizza sauce', '8 oz fresh mozzarella sliced', '2 large tomatoes sliced', 'Fresh basil leaves', '2 tablespoons olive oil', 'Salt and pepper to taste', 'Parmesan cheese grated']",
       "steps": "['Preheat oven to 475°F', 'Roll out pizza dough on floured surface', 'Transfer to pizza stone or baking sheet', 'Brush with olive oil', 'Spread pizza sauce evenly', 'Add mozzarella and tomato slices', 'Season with salt and pepper', 'Bake 12-15 minutes until crust is golden', 'Top with fresh basil and parmesan', 'Slice and serve immediately']",
@@ -61,7 +61,7 @@ const App = () => {
       "name": "Chicken Teriyaki Bowl",
       "collection": "collection/asian-recipes/",
       "recipie_collection_idx": 5,
-      "image": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400",
+      "image": null,
       "descripition": "Tender grilled chicken glazed with homemade teriyaki sauce served over steamed rice with vegetables.",
       "ingredients": "['2 chicken breasts', '1/4 cup soy sauce', '2 tablespoons mirin', '2 tablespoons brown sugar', '1 tablespoon rice vinegar', '1 teaspoon sesame oil', '2 cloves garlic minced', '1 teaspoon ginger grated', '2 cups cooked rice', '1 cup broccoli florets', '1 carrot julienned', 'Sesame seeds', 'Green onions sliced']",
       "steps": "['Mix soy sauce mirin brown sugar vinegar sesame oil garlic and ginger for teriyaki sauce', 'Marinate chicken in half the sauce for 30 minutes', 'Grill chicken 6-7 minutes per side until cooked through', 'Steam broccoli and carrots until tender-crisp', 'Slice chicken and glaze with remaining teriyaki sauce', 'Serve over rice with vegetables', 'Garnish with sesame seeds and green onions']",
@@ -71,7 +71,7 @@ const App = () => {
       "name": "Mediterranean Quinoa Salad",
       "collection": "collection/healthy-recipes/",
       "recipie_collection_idx": 6,
-      "image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400",
+      "image": null,
       "descripition": "Fresh and vibrant quinoa salad with cucumbers, tomatoes, olives, and feta cheese in a lemon herb dressing.",
       "ingredients": "['1 cup quinoa', '2 cups vegetable broth', '1 cucumber diced', '2 cups cherry tomatoes halved', '1/2 red onion thinly sliced', '1/2 cup kalamata olives', '1/2 cup feta cheese crumbled', '1/4 cup olive oil', '2 tablespoons lemon juice', '2 tablespoons fresh parsley', '1 tablespoon fresh oregano', 'Salt and pepper to taste']",
       "steps": "['Rinse quinoa in cold water', 'Bring vegetable broth to boil add quinoa', 'Reduce heat cover simmer 15 minutes until liquid absorbed', 'Fluff with fork and let cool completely', 'Dice cucumber halve tomatoes slice onion', 'Whisk olive oil lemon juice parsley oregano salt and pepper', 'Combine quinoa vegetables olives and feta', 'Toss with dressing', 'Chill for at least 30 minutes before serving']",
@@ -167,31 +167,33 @@ const App = () => {
 
       // Test API connection with a simple request
       let aiGenerated = false;
-      try {
-        const testResponse = await fetch('https://api-inference.huggingface.co/models/gpt2', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${HF_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            inputs: `Recipe: ${recipe.name}`,
-            parameters: {
-              max_new_tokens: 10,
-              temperature: 0.7
-            }
-          })
-        });
+      if (HF_API_KEY && HF_API_KEY !== 'your_hugging_face_api_key_here') {
+        try {
+          const testResponse = await fetch('https://api-inference.huggingface.co/models/gpt2', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${HF_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              inputs: `Recipe: ${recipe.name}`,
+              parameters: {
+                max_new_tokens: 10,
+                temperature: 0.7
+              }
+            })
+          });
 
-        if (testResponse.ok) {
-          aiGenerated = true;
-          console.log('✅ AI API connection successful');
-        } else if (testResponse.status === 401) {
-          setApiKeyError(true);
-          throw new Error('Invalid API key');
+          if (testResponse.ok) {
+            aiGenerated = true;
+            console.log('✅ AI API connection successful');
+          } else if (testResponse.status === 401) {
+            setApiKeyError(true);
+            throw new Error('Invalid API key');
+          }
+        } catch (apiError) {
+          console.log('API test failed, using intelligent estimates:', apiError.message);
         }
-      } catch (apiError) {
-        console.log('API test failed, using intelligent estimates:', apiError.message);
       }
 
       // Always use our reliable intelligent estimation system
@@ -304,10 +306,6 @@ const App = () => {
     setApiKeyError(false);
   };
 
-  const handleImageError = (event) => {
-    event.target.style.display = 'none';
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       {/* Header */}
@@ -415,15 +413,9 @@ const App = () => {
                               </span>
                             </div>
                           </div>
-                          {recipe.image && (
-                            <img 
-                              src={recipe.image} 
-                              alt={recipe.name}
-                              className="w-16 h-16 object-cover rounded-lg ml-4"
-                              onError={handleImageError}
-                            />
-                          )}
-                          <Utensils className="h-5 w-5 text-gray-400 ml-2" />
+                          <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg ml-4 flex items-center justify-center">
+                            <Utensils className="h-8 w-8 text-indigo-600" />
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -454,14 +446,13 @@ const App = () => {
               <h1 className="text-4xl font-bold text-gray-800 mb-4">{selectedRecipe.name}</h1>
               <p className="text-lg text-gray-600 mb-6">{selectedRecipe.descripition}</p>
               
-              {selectedRecipe.image && (
-                <img 
-                  src={selectedRecipe.image} 
-                  alt={selectedRecipe.name}
-                  className="w-full h-64 object-cover rounded-xl mb-6"
-                  onError={handleImageError}
-                />
-              )}
+              {/* Recipe Icon Placeholder */}
+              <div className="w-full h-64 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl mb-6 flex items-center justify-center">
+                <div className="text-center">
+                  <ChefHat className="h-20 w-20 text-indigo-600 mx-auto mb-4" />
+                  <p className="text-indigo-800 font-semibold">{selectedRecipe.name}</p>
+                </div>
+              </div>
               
               <div className="flex flex-wrap gap-2 mb-6">
                 {parseIngredients(selectedRecipe.ingredients).slice(0, 8).map((ingredient, index) => (
