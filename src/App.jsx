@@ -152,9 +152,16 @@ const App = () => {
 
   const handleRecipeSelect = async (recipe) => {
     console.log('🔍 DEBUG - Recipe selected:', recipe.name);
+    console.log('🔍 DEBUG - Original recipe steps (WILL BE IGNORED):', recipe.steps);
+    
+    // COMPLETELY BLOCK ACCESS TO ORIGINAL STEPS
+    const cleanRecipe = {
+      ...recipe,
+      steps: null // REMOVE original steps completely
+    };
     
     // Immediately set loading and clear previous state to prevent static content
-    setSelectedRecipe(recipe);
+    setSelectedRecipe(cleanRecipe); // Use cleaned recipe
     setLoading(true);
     setAiRecommendations(null); // Clear previous recommendations immediately
     setShowResults(false);
@@ -162,8 +169,8 @@ const App = () => {
     
     console.log('🔍 DEBUG - Set loading=true, aiRecommendations=null');
     
-    // Call AI for recommendations
-    await getAIRecommendations(recipe);
+    // Call AI for recommendations with CLEANED recipe (no original steps)
+    await getAIRecommendations(cleanRecipe);
   };
 
   const getAIRecommendations = async (recipe) => {
@@ -188,6 +195,7 @@ const App = () => {
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
+        aiInstructions: null, // EXPLICITLY set to null - NO STATIC CONTENT EVER
         aiImage: null // For AI-generated images
       };
       
@@ -245,10 +253,11 @@ const App = () => {
       console.log('🔍 DEBUG - aiGenerated:', aiGenerated);
       console.log('🔍 DEBUG - aiInstructions in results:', aiResults.aiInstructions);
       
-      // Set recommendations
+      // Set recommendations - NEVER include static instructions
       setAiRecommendations({
         ...aiResults,
-        aiGenerated: aiGenerated
+        aiGenerated: aiGenerated,
+        aiInstructions: aiResults.aiInstructions // Only AI instructions, never static
       });
 
       if (!aiGenerated && !GEMINI_API_KEY && !HF_API_KEY) {
@@ -264,7 +273,8 @@ const App = () => {
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
-        culturalInfo: null, // No cultural info if AI completely fails
+        culturalInfo: null,
+        aiInstructions: null, // NEVER SET STATIC INSTRUCTIONS
         aiGenerated: false
       });
     } finally {
