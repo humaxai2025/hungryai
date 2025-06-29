@@ -8,13 +8,18 @@ import { Search, Clock, Apple, Utensils, Youtube, BookOpen, Sparkles, ChefHat } 
   
 
 const App = () => {
+  const [recipes, setRecipes] = useState([]);
+  const [recipesLoading, setRecipesLoading] = useState(false);
+  const [recipesError, setRecipesError] = useState(null);
+
+  // other state:
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [aiRecommendations, setAiRecommendations] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [recipesLoading, setRecipesLoading] = useState(false);
+
 
 
   const parseIngredients = (ingredientsStr) => {
