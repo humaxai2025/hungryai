@@ -229,7 +229,7 @@ input[type="text"] {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  min-height: 70vh;
   text-align: center;
 }
 
