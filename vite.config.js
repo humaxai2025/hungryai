@@ -4,14 +4,19 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [
     react({
-      jsxRuntime: 'automatic'
+      jsxRuntime: 'automatic',
+      babel: {
+        plugins: [
+          ['babel-plugin-react-remove-properties', { properties: ['data-testid'] }]
+        ]
+      }
     })
   ],
   base: '/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: false, // disables source map eval in prod
+    sourcemap: false,
     minify: 'esbuild',
     rollupOptions: {
       output: {
@@ -27,7 +32,10 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    host: true
+    host: true,
+    headers: {
+      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https://api-inference.huggingface.co; object-src 'none';"
+    }
   },
   preview: {
     port: 3000,
