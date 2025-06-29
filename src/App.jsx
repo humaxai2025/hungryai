@@ -228,10 +228,7 @@ const App = () => {
       // Set recommendations
       setAiRecommendations({
         ...aiResults,
-        aiGenerated: aiGenerated,
-        message: aiGenerated ? 
-          "🤖 REAL AI Analysis - Powered by Google Gemini/Hugging Face" : 
-          "❌ AI unavailable - Add VITE_GEMINI_API_KEY or VITE_HF_API_KEY to .env"
+        aiGenerated: aiGenerated
       });
 
       if (!aiGenerated && !GEMINI_API_KEY && !HF_API_KEY) {
@@ -247,8 +244,7 @@ const App = () => {
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
         culturalInfo: null, // No cultural info if AI completely fails
-        aiGenerated: false,
-        message: "❌ AI analysis failed - check API keys"
+        aiGenerated: false
       });
     } finally {
       setLoading(false);
@@ -1199,7 +1195,6 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
                               {index + 1}
                             </span>
                             <p className="text-gray-700 text-sm flex-1 leading-relaxed">
-                              <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full mr-2 mb-1">🤖 AI Enhanced</span>
                               {step}
                             </p>
                           </div>
@@ -1233,12 +1228,12 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
                   </div>
                 </div>
                 
-                {/* AI Status Message Below Instructions */}
-                {aiRecommendations?.message && (
-                  <div className={`mt-4 ${aiRecommendations.aiGenerated ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'} border rounded-xl p-4`}>
+                {/* Loading message under instructions */}
+                {loading && (
+                  <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
                     <div className="flex items-center space-x-2">
-                      <Sparkles className={`h-5 w-5 ${aiRecommendations.aiGenerated ? 'text-green-600' : 'text-blue-600'}`} />
-                      <span className={aiRecommendations.aiGenerated ? 'text-green-800' : 'text-blue-800'}>{aiRecommendations.message}</span>
+                      <Sparkles className="h-5 w-5 text-blue-600 animate-spin" />
+                      <span className="text-blue-800">AI is analyzing your recipe...</span>
                     </div>
                   </div>
                 )}
@@ -1256,14 +1251,7 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
             </div>
 
             {/* AI Recommendations */}
-            {loading ? (
-              <div className="bg-white/80 backdrop-blur-md rounded-2xl p-8 shadow-lg">
-                <div className="flex items-center justify-center space-x-2">
-                  <Sparkles className="h-6 w-6 text-indigo-600 animate-spin" />
-                  <span className="text-lg text-gray-600">AI is analyzing your recipe...</span>
-                </div>
-              </div>
-            ) : aiRecommendations ? (
+            {!loading && aiRecommendations ? (
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Preparation Time & Nutrition */}
                 <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg">
