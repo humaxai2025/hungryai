@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Clock, Apple, Utensils, BookOpen, Sparkles, ChefHat, AlertCircle } from 'lucide-react';
+import { Search, Clock, Apple, Utensils, BookOpen, Sparkles, AlertCircle } from 'lucide-react';
+
+// Custom ChefHat component to avoid icon loading issues
+const ChefHat = ({ className = "h-5 w-5" }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M17.5 11c.276 0 .5-.224.5-.5s-.224-.5-.5-.5-.5.224-.5.5.224.5.5.5zm-11 0c.276 0 .5-.224.5-.5s-.224-.5-.5-.5-.5.224-.5.5.224.5.5.5zm13.5-6c0-1.654-1.346-3-3-3-.771 0-1.468.301-2 .78-.532-.479-1.229-.78-2-.78s-1.468.301-2 .78c-.532-.479-1.229-.78-2-.78s-1.468.301-2 .78c-.532-.479-1.229-.78-2-.78-1.654 0-3 1.346-3 3v1c0 1.654 1.346 3 3 3h.184l1.316 7h11l1.316-7h.184c1.654 0 3-1.346 3-3v-1zm-2 1c0 .551-.449 1-1 1h-12c-.551 0-1-.449-1-1v-1c0-.551.449-1 1-1s1 .449 1 1h2c0-.551.449-1 1-1s1 .449 1 1h2c0-.551.449-1 1-1s1 .449 1 1h2c0-.551.449-1 1-1s1 .449 1 1h2c0-.551.449-1 1-1s1 .449 1 1v1z"/>
+  </svg>
+);
 
 const App = () => {
   const [recipes, setRecipes] = useState([]);
@@ -157,29 +164,25 @@ const App = () => {
     try {
       const ingredients = parseIngredients(recipe.ingredients);
       
-      // Check for API key
+      // Check for API key first
       const HF_API_KEY = import.meta.env.VITE_HF_API_KEY;
       
-      if (!HF_API_KEY || HF_API_KEY === 'your_hugging_face_api_key_here') {
-        setApiKeyError(true);
-        throw new Error('API_KEY_MISSING');
-      }
-
-      // Test API connection with a simple request
+      // Only attempt API connection if we have a valid API key
       let aiGenerated = false;
-      if (HF_API_KEY && HF_API_KEY !== 'your_hugging_face_api_key_here') {
+      if (HF_API_KEY && HF_API_KEY !== 'your_hugging_face_api_key_here' && HF_API_KEY.trim().length > 10) {
         try {
-          const testResponse = await fetch('https://api-inference.huggingface.co/models/gpt2', {
+          // Use a more reliable endpoint
+          const testResponse = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${HF_API_KEY}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              inputs: `Recipe: ${recipe.name}`,
+              inputs: `Recipe analysis for ${recipe.name}`,
               parameters: {
-                max_new_tokens: 10,
-                temperature: 0.7
+                max_new_tokens: 5,
+                temperature: 0.1
               }
             })
           });
@@ -189,15 +192,16 @@ const App = () => {
             console.log('✅ AI API connection successful');
           } else if (testResponse.status === 401) {
             setApiKeyError(true);
-            throw new Error('Invalid API key');
+            console.log('❌ Invalid API key');
           }
         } catch (apiError) {
-          console.log('API test failed, using intelligent estimates:', apiError.message);
+          console.log('🔄 API unavailable, using intelligent estimates:', apiError.message);
         }
+      } else {
+        console.log('🔑 No API key provided, using intelligent estimates');
       }
 
-      // Always use our reliable intelligent estimation system
-      // (AI parsing for structured data is unreliable anyway)
+      // Always provide our reliable intelligent estimation system
       setAiRecommendations({
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
@@ -217,9 +221,7 @@ const App = () => {
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
         articleUrl: createSearchUrl(recipe.name + ' recipe'),
-        error: error.message.includes('API_KEY_MISSING') || error.message.includes('API key') ? 
-          "SETUP_REQUIRED" :
-          "AI connection unavailable. Showing intelligent estimates.",
+        error: "Using intelligent estimates (AI connection unavailable)",
         aiGenerated: false
       });
     } finally {
@@ -479,10 +481,10 @@ const App = () => {
                   <span className="text-lg text-gray-600">AI is analyzing your recipe...</span>
                 </div>
               </div>
-            ) : aiRecommendations && aiRecommendations.error !== "SETUP_REQUIRED" ? (
+            ) : aiRecommendations ? (
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Status indicator */}
-                {aiRecommendations.error && aiRecommendations.error !== "SETUP_REQUIRED" && (
+                {aiRecommendations.error && (
                   <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-xl p-4">
                     <div className="flex items-center space-x-2">
                       <AlertCircle className="h-5 w-5 text-blue-600" />
@@ -571,19 +573,6 @@ const App = () => {
                     </a>
                   </div>
                 </div>
-              </div>
-            ) : aiRecommendations?.error === "SETUP_REQUIRED" ? (
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6">
-                <div className="flex items-center space-x-2 mb-4">
-                  <AlertCircle className="h-5 w-5 text-amber-600" />
-                  <h3 className="text-lg font-semibold text-amber-800">AI Features Need Setup</h3>
-                </div>
-                <p className="text-amber-700 mb-4">
-                  To get AI-powered nutritional analysis and ingredient recommendations, please set up your free Hugging Face API key.
-                </p>
-                <p className="text-sm text-amber-600">
-                  Don't worry - you can still enjoy the recipe! The app provides estimated nutritional values without the API.
-                </p>
               </div>
             ) : null}
           </div>
