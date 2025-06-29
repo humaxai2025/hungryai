@@ -18,8 +18,5 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "env": {
-    "REACT_APP_HF_API_KEY": "@react_app_hf_api_key"
-  }
+  ]
 }
