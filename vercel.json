@@ -7,6 +7,12 @@
       "config": { "distDir": "dist" }
     }
   ],
+  "rewrites": [
+    {
+      "source": "/data/recipe.json",
+      "destination": "/404"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -18,10 +24,6 @@
       ]
     }
   ],
-  "routes": [
-    {
-      "src": "/data/recipe.json",
-      "dest": "/404"
-    }
-  ]
+  "cleanUrls": true,
+  "trailingSlash": false
 }
