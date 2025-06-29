@@ -95,7 +95,8 @@ const App = () => {
       const ingredients = parseIngredients(recipe.ingredients);
       
       // Hugging Face API integration
-      const HF_API_KEY = process.env.REACT_APP_HF_API_KEY || 'your_hugging_face_api_key_here';
+      const HF_API_KEY = import.meta.env.VITE_HF_API_KEY || 'your_hugging_face_api_key_here';
+
       
       if (HF_API_KEY === 'your_hugging_face_api_key_here') {
         throw new Error('Please set your Hugging Face API key in environment variables');
