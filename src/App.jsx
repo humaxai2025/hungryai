@@ -167,12 +167,14 @@ const App = () => {
       // Check for API keys
       const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
       const HF_API_KEY = import.meta.env.VITE_HF_API_KEY;
+      const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
       
       let aiGenerated = false;
       let aiResults = {
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
-        alternateIngredients: generateAlternatives(ingredients.slice(0, 3))
+        alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
+        aiImage: null // For AI-generated images
       };
       
       console.log('🤖 Starting REAL AI analysis...');
@@ -208,6 +210,20 @@ const App = () => {
           console.log('🔄 Hugging Face also failed:', error.message);
         }
       }
+
+      // Generate AI image if recipe doesn't have one
+      if (!recipe.image && (OPENAI_API_KEY || HF_API_KEY)) {
+        console.log('🎨 Generating AI image for recipe...');
+        try {
+          const aiImage = await generateRecipeImage(recipe, OPENAI_API_KEY, HF_API_KEY);
+          if (aiImage) {
+            aiResults.aiImage = aiImage;
+            console.log('✅ AI image generated successfully!');
+          }
+        } catch (error) {
+          console.log('🔄 AI image generation failed:', error.message);
+        }
+      }
       
       // Set recommendations
       setAiRecommendations({
@@ -237,6 +253,92 @@ const App = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // AI Image Generation Function
+  const generateRecipeImage = async (recipe, openaiKey, hfKey) => {
+    try {
+      // Try DALL-E first (best quality)
+      if (openaiKey && openaiKey.length > 20) {
+        console.log('🎨 Trying DALL-E image generation...');
+        
+        const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openaiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: "dall-e-3",
+            prompt: `A beautiful, appetizing photo of ${recipe.name}, ${recipe.descripition}. Professional food photography, vibrant colors, restaurant quality presentation, high resolution, natural lighting.`,
+            size: "1024x1024",
+            quality: "standard",
+            n: 1
+          })
+        });
+
+        if (dalleResponse.ok) {
+          const dalleResult = await dalleResponse.json();
+          if (dalleResult.data && dalleResult.data[0]) {
+            console.log('✅ DALL-E image generated successfully!');
+            return dalleResult.data[0].url;
+          }
+        } else {
+          console.log('❌ DALL-E failed:', dalleResponse.status);
+        }
+      }
+
+      // Fallback to Hugging Face Stable Diffusion
+      if (hfKey && hfKey.startsWith('hf_')) {
+        console.log('🎨 Trying Stable Diffusion image generation...');
+        
+        const stableDiffusionModels = [
+          'stabilityai/stable-diffusion-2-1',
+          'runwayml/stable-diffusion-v1-5',
+          'CompVis/stable-diffusion-v1-4'
+        ];
+
+        for (const model of stableDiffusionModels) {
+          try {
+            const sdResponse = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${hfKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                inputs: `professional food photography of ${recipe.name}, delicious, appetizing, high quality, restaurant presentation, vibrant colors, natural lighting`,
+                parameters: {
+                  guidance_scale: 7.5,
+                  num_inference_steps: 50
+                },
+                options: {
+                  wait_for_model: true
+                }
+              })
+            });
+
+            if (sdResponse.ok) {
+              const imageBlob = await sdResponse.blob();
+              const imageUrl = URL.createObjectURL(imageBlob);
+              console.log(`✅ ${model.split('/')[1]} image generated!`);
+              return imageUrl;
+            } else {
+              console.log(`❌ ${model.split('/')[1]} failed:`, sdResponse.status);
+              continue;
+            }
+          } catch (error) {
+            console.log(`❌ ${model.split('/')[1]} error:`, error.message);
+            continue;
+          }
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('AI image generation error:', error);
+      return null;
     }
   };
 
@@ -565,7 +667,16 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
                   </div>
                   
                   <div className="bg-white/50 rounded-lg p-4">
-                    <h4 className="font-semibold text-amber-800 mb-2">🔄 Option 2: Hugging Face (Backup)</h4>
+                    <h4 className="font-semibold text-amber-800 mb-2">🎨 Option 2: OpenAI DALL-E (For AI Images)</h4>
+                    <ol className="list-decimal list-inside space-y-1 ml-2 text-sm">
+                      <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">OpenAI API Keys</a></li>
+                      <li>Create API Key (pay-per-use, ~$0.04 per image)</li>
+                      <li>Add <code className="bg-amber-100 px-2 py-1 rounded">VITE_OPENAI_API_KEY=your_openai_key</code> to your .env file</li>
+                    </ol>
+                  </div>
+                  
+                  <div className="bg-white/50 rounded-lg p-4">
+                    <h4 className="font-semibold text-amber-800 mb-2">🔄 Option 3: Hugging Face (Backup for Analysis + Free Images)</h4>
                     <ol className="list-decimal list-inside space-y-1 ml-2 text-sm">
                       <li>Go to <a href="https://huggingface.co/join" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">huggingface.co</a> and create a free account</li>
                       <li>Go to Settings → Access Tokens and create a new token</li>
@@ -574,7 +685,7 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
                   </div>
                   
                   <p className="text-sm font-semibold">⚡ Restart the development server after adding API keys</p>
-                  <p className="text-xs">Without AI, this app shows basic estimates. With AI, you get precise nutritional analysis, cooking times, and smart ingredient alternatives!</p>
+                  <p className="text-xs">🎯 <strong>Recommended combo:</strong> Gemini (analysis) + OpenAI (images) for best results!</p>
                 </div>
               </div>
             </div>
@@ -675,13 +786,35 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
               <h1 className="text-4xl font-bold text-gray-800 mb-4">{selectedRecipe.name}</h1>
               <p className="text-lg text-gray-600 mb-6">{selectedRecipe.descripition}</p>
               
-              {/* Recipe Icon Placeholder */}
-              <div className="w-full h-64 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl mb-6 flex items-center justify-center">
-                <div className="text-center">
-                  <ChefHat className="h-20 w-20 text-indigo-600 mx-auto mb-4" />
-                  <p className="text-indigo-800 font-semibold">{selectedRecipe.name}</p>
+              {/* Recipe Image - Original or AI-generated */}
+              {selectedRecipe.image ? (
+                <img 
+                  src={selectedRecipe.image} 
+                  alt={selectedRecipe.name}
+                  className="w-full h-64 object-cover rounded-xl mb-6"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              ) : aiRecommendations?.aiImage ? (
+                <div className="relative">
+                  <img 
+                    src={aiRecommendations.aiImage} 
+                    alt={`AI-generated ${selectedRecipe.name}`}
+                    className="w-full h-64 object-cover rounded-xl mb-6"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                  <div className="absolute top-2 right-2 bg-purple-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                    🤖 AI Generated
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="w-full h-64 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl mb-6 flex items-center justify-center">
+                  <div className="text-center">
+                    <ChefHat className="h-20 w-20 text-indigo-600 mx-auto mb-4" />
+                    <p className="text-indigo-800 font-semibold">{selectedRecipe.name}</p>
+                    {loading && <p className="text-xs text-indigo-600 mt-2">🎨 Generating AI image...</p>}
+                  </div>
+                </div>
+              )}
               
               <div className="flex flex-wrap gap-2 mb-6">
                 {parseIngredients(selectedRecipe.ingredients).slice(0, 8).map((ingredient, index) => (
