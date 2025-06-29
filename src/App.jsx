@@ -151,16 +151,24 @@ const App = () => {
   };
 
   const handleRecipeSelect = async (recipe) => {
+    console.log('🔍 DEBUG - Recipe selected:', recipe.name);
+    
+    // Immediately set loading and clear previous state to prevent static content
     setSelectedRecipe(recipe);
     setLoading(true);
+    setAiRecommendations(null); // Clear previous recommendations immediately
     setShowResults(false);
     setApiKeyError(false);
+    
+    console.log('🔍 DEBUG - Set loading=true, aiRecommendations=null');
     
     // Call AI for recommendations
     await getAIRecommendations(recipe);
   };
 
   const getAIRecommendations = async (recipe) => {
+    console.log('🔍 DEBUG - Starting getAIRecommendations for:', recipe.name);
+    
     try {
       const ingredients = parseIngredients(recipe.ingredients);
       
@@ -168,6 +176,12 @@ const App = () => {
       const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
       const HF_API_KEY = import.meta.env.VITE_HF_API_KEY;
       const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+      
+      console.log('🔍 DEBUG - API Keys available:', {
+        gemini: !!GEMINI_API_KEY,
+        hf: !!HF_API_KEY,
+        openai: !!OPENAI_API_KEY
+      });
       
       let aiGenerated = false;
       let aiResults = {
@@ -189,6 +203,7 @@ const App = () => {
             aiResults = geminiResults.data;
             aiGenerated = true;
             console.log('✅ Google Gemini AI analysis successful!');
+            console.log('🔍 DEBUG - Gemini aiInstructions:', geminiResults.data.aiInstructions);
           }
         } catch (error) {
           console.log('🔄 Gemini failed, trying Hugging Face...', error.message);
@@ -205,6 +220,7 @@ const App = () => {
             aiResults = hfResults.data;
             aiGenerated = true;
             console.log('✅ Hugging Face AI analysis successful!');
+            console.log('🔍 DEBUG - HF aiInstructions:', hfResults.data.aiInstructions);
           }
         } catch (error) {
           console.log('🔄 Hugging Face also failed:', error.message);
@@ -225,6 +241,10 @@ const App = () => {
         }
       }
       
+      console.log('🔍 DEBUG - Final aiResults before setting:', aiResults);
+      console.log('🔍 DEBUG - aiGenerated:', aiGenerated);
+      console.log('🔍 DEBUG - aiInstructions in results:', aiResults.aiInstructions);
+      
       // Set recommendations
       setAiRecommendations({
         ...aiResults,
@@ -239,6 +259,7 @@ const App = () => {
       console.error('Error in AI recommendations:', error);
       
       const ingredients = parseIngredients(recipe.ingredients);
+      console.log('🔍 DEBUG - Setting fallback recommendations (no AI)');
       setAiRecommendations({
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
@@ -247,6 +268,7 @@ const App = () => {
         aiGenerated: false
       });
     } finally {
+      console.log('🔍 DEBUG - Setting loading=false');
       setLoading(false);
     }
   };
