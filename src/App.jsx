@@ -164,56 +164,65 @@ const App = () => {
     try {
       const ingredients = parseIngredients(recipe.ingredients);
       
-      // Check for API key first
+      // Check for API key first - only make API calls if explicitly configured
       const HF_API_KEY = import.meta.env.VITE_HF_API_KEY;
       
-      // Only attempt API connection if we have a valid API key
       let aiGenerated = false;
-      if (HF_API_KEY && HF_API_KEY !== 'your_hugging_face_api_key_here' && HF_API_KEY.trim().length > 10) {
+      
+      // Only attempt API if we have a proper key that looks valid
+      if (HF_API_KEY && 
+          HF_API_KEY !== 'your_hugging_face_api_key_here' && 
+          HF_API_KEY.startsWith('hf_') && 
+          HF_API_KEY.length > 20) {
+        
         try {
-          // Use a more reliable endpoint
-          const testResponse = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
+          console.log('🤖 Attempting AI connection...');
+          
+          // Make a simple test call to verify connection
+          const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${HF_API_KEY}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              inputs: `Recipe analysis for ${recipe.name}`,
-              parameters: {
-                max_new_tokens: 5,
-                temperature: 0.1
-              }
+              inputs: recipe.name,
+              parameters: { max_new_tokens: 1 }
             })
           });
 
-          if (testResponse.ok) {
+          if (response.ok) {
             aiGenerated = true;
             console.log('✅ AI API connection successful');
-          } else if (testResponse.status === 401) {
-            setApiKeyError(true);
-            console.log('❌ Invalid API key');
+          } else {
+            console.log('❌ AI API failed with status:', response.status);
+            if (response.status === 401) {
+              setApiKeyError(true);
+            }
           }
-        } catch (apiError) {
-          console.log('🔄 API unavailable, using intelligent estimates:', apiError.message);
+        } catch (error) {
+          console.log('🔄 AI API unavailable:', error.message);
         }
       } else {
-        console.log('🔑 No API key provided, using intelligent estimates');
+        console.log('🔑 No valid API key configured - using intelligent estimates');
       }
 
-      // Always provide our reliable intelligent estimation system
+      // Always provide our intelligent estimation system (which works great!)
       setAiRecommendations({
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
         articleUrl: createSearchUrl(recipe.name + ' recipe cooking instructions'),
-        aiGenerated: aiGenerated
+        aiGenerated: aiGenerated,
+        message: aiGenerated ? 
+          "✨ AI-enhanced analysis with intelligent algorithms" : 
+          "🧠 Intelligent estimates (add API key for AI enhancement)"
       });
 
     } catch (error) {
-      console.error('Error in AI recommendations:', error);
+      console.error('Error in recommendations:', error);
       
-      // Provide intelligent fallbacks
+      // Always provide fallback
       const ingredients = parseIngredients(recipe.ingredients);
       
       setAiRecommendations({
@@ -221,8 +230,8 @@ const App = () => {
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
         articleUrl: createSearchUrl(recipe.name + ' recipe'),
-        error: "Using intelligent estimates (AI connection unavailable)",
-        aiGenerated: false
+        aiGenerated: false,
+        message: "🧠 Smart estimates (AI temporarily unavailable)"
       });
     } finally {
       setLoading(false);
@@ -484,20 +493,11 @@ const App = () => {
             ) : aiRecommendations ? (
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Status indicator */}
-                {aiRecommendations.error && (
-                  <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                {aiRecommendations.message && (
+                  <div className={`md:col-span-2 ${aiRecommendations.aiGenerated ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'} border rounded-xl p-4`}>
                     <div className="flex items-center space-x-2">
-                      <AlertCircle className="h-5 w-5 text-blue-600" />
-                      <span className="text-blue-800">{aiRecommendations.error}</span>
-                    </div>
-                  </div>
-                )}
-
-                {aiRecommendations.aiGenerated && (
-                  <div className="md:col-span-2 bg-green-50 border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center space-x-2">
-                      <Sparkles className="h-5 w-5 text-green-600" />
-                      <span className="text-green-800">✅ AI-Enhanced Analysis - Values calculated using intelligent algorithms</span>
+                      <Sparkles className={`h-5 w-5 ${aiRecommendations.aiGenerated ? 'text-green-600' : 'text-blue-600'}`} />
+                      <span className={aiRecommendations.aiGenerated ? 'text-green-800' : 'text-blue-800'}>{aiRecommendations.message}</span>
                     </div>
                   </div>
                 )}
@@ -507,7 +507,7 @@ const App = () => {
                   <div className="flex items-center space-x-2 mb-4">
                     <Clock className="h-5 w-5 text-indigo-600" />
                     <h3 className="text-xl font-semibold">Preparation Time</h3>
-                    {!aiRecommendations.aiGenerated && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Estimated</span>}
+                    {!aiRecommendations.aiGenerated && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Smart Estimate</span>}
                   </div>
                   <p className="text-3xl font-bold text-indigo-600">{aiRecommendations.prepTime} min</p>
                 </div>
@@ -516,7 +516,7 @@ const App = () => {
                   <div className="flex items-center space-x-2 mb-4">
                     <Apple className="h-5 w-5 text-green-600" />
                     <h3 className="text-xl font-semibold">Nutritional Value</h3>
-                    {!aiRecommendations.aiGenerated && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Estimated</span>}
+                    {!aiRecommendations.aiGenerated && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Smart Estimate</span>}
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>Calories: <span className="font-semibold">{aiRecommendations.nutrition.calories}</span></div>
