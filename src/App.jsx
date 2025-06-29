@@ -117,7 +117,7 @@ Format your response as JSON:
   "articleUrl": "https://example.com/recipe"
 }`;
 
-      const response = await fetch('https://api-inference.huggingface.co/models/openai-community/gpt2', {
+      const response = await fetch('https://api-inference.huggingface.co/models/mistralai/Mistral-Small-3.2-24B-Instruct-2506', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${HF_API_KEY}`,
