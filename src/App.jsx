@@ -933,7 +933,7 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
           </div>
         </div>
       </header>
- <div className="center-container">
+
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* API Key Setup Notice */}
         {apiKeyError && (
@@ -991,72 +991,72 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
             </div>
           </div>
         ) : !selectedRecipe ? (
-        <>
-       
-          {/* Hero Section */}
-          <div className="text-center mb-12">
-            <h1 className="text-6xl font-bold text-gray-800 mb-4">
-              What's Cooking Today?
-            </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              Tell us what you want to eat, and we'll find the perfect recipe with AI-powered insights!
-            </p>
-            
-            {/* Search Box */}
-            <div className="relative max-w-2xl mx-auto">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    handleSearch(e.target.value);
-                  }}
-                  placeholder="I want to eat paneer biryani..."
-                  className="w-full pl-12 pr-4 py-4 text-lg border-2 border-transparent rounded-full shadow-lg focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
-                />
-              </div>
-              {/* Search Results Dropdown */}
-              {showResults && searchResults.length > 0 && (
-                <div className="absolute top-full mt-2 w-full bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-10">
-                  {searchResults.map((recipe, index) => (
-                    <div
-                      key={recipe.recipie_collection_idx || index}
-                      onClick={() => handleRecipeSelect(recipe)}
-                      className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
-                          <p className="text-sm text-gray-600 line-clamp-2">{recipe.descripition}</p>
-                          <div className="mt-2">
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                              {recipe.collection.includes('vegan') ? 'Vegan' : 
-                               recipe.collection.includes('indian') ? 'Indian' :
-                               recipe.collection.includes('italian') ? 'Italian' :
-                               recipe.collection.includes('asian') ? 'Asian' : 'Healthy'} Recipe
-                            </span>
+          <>
+            {/* Hero Section */}
+            <div className="text-center mb-12">
+              <h1 className="text-6xl font-bold text-gray-800 mb-4">
+                What's Cooking?
+              </h1>
+              <p className="text-xl text-gray-600 mb-8">
+                Tell us what you want to eat, and we'll find the perfect recipe with AI-powered insights!
+              </p>
+              
+              {/* Search Box */}
+              <div className="relative max-w-2xl mx-auto">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      handleSearch(e.target.value);
+                    }}
+                    placeholder="I want to eat paneer biryani..."
+                    className="w-full pl-12 pr-4 py-4 text-lg border-2 border-transparent rounded-full shadow-lg focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
+                  />
+                </div>
+                
+                {/* Search Results Dropdown */}
+                {showResults && searchResults.length > 0 && (
+                  <div className="absolute top-full mt-2 w-full bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-10">
+                    {searchResults.map((recipe, index) => (
+                      <div
+                        key={recipe.recipie_collection_idx || index}
+                        onClick={() => handleRecipeSelect(recipe)}
+                        className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
+                            <p className="text-sm text-gray-600 line-clamp-2">{recipe.descripition}</p>
+                            <div className="mt-2">
+                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                {recipe.collection.includes('vegan') ? 'Vegan' : 
+                                 recipe.collection.includes('indian') ? 'Indian' :
+                                 recipe.collection.includes('italian') ? 'Italian' :
+                                 recipe.collection.includes('asian') ? 'Asian' : 'Healthy'} Recipe
+                              </span>
+                            </div>
+                          </div>
+                          <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg ml-4 flex items-center justify-center">
+                            <Utensils className="h-8 w-8 text-indigo-600" />
                           </div>
                         </div>
-                        <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg ml-4 flex items-center justify-center">
-                          <Utensils className="h-8 w-8 text-indigo-600" />
-                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {showResults && searchResults.length === 0 && searchQuery.trim() && (
-                <div className="absolute top-full mt-2 w-full bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-10">
-                  <p className="text-gray-600 text-center">No recipes found. Try different keywords!</p>
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+                
+                {showResults && searchResults.length === 0 && searchQuery.trim() && (
+                  <div className="absolute top-full mt-2 w-full bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-10">
+                    <p className="text-gray-600 text-center">No recipes found. Try different keywords!</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </>
-      ) : (
+          </>
+        ) : (
           /* Recipe Details & AI Recommendations */
           <div className="space-y-8">
             {/* Back Button */}
