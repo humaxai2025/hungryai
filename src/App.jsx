@@ -15,63 +15,100 @@ const App = () => {
   const [showResults, setShowResults] = useState(false);
   const [apiKeyError, setApiKeyError] = useState(false);
 
+  // Embedded recipe data to avoid CSP issues
+  const fallbackRecipes = [
+    {
+      "name": "Paneer Biryani",
+      "collection": "collection/indian-recipes/",
+      "recipie_collection_idx": 1,
+      "image": "https://images.unsplash.com/photo-1563379091339-03246963d76a?w=400",
+      "descripition": "A fragrant and flavorful rice dish with marinated paneer, aromatic spices, and basmati rice layered to perfection.",
+      "ingredients": "['2 cups basmati rice', '250g paneer cubes', '1 large onion sliced', '1/2 cup yogurt', '2 tbsp ginger-garlic paste', '1 tsp red chili powder', '1/2 tsp turmeric', '1 tsp garam masala', '4-5 green cardamom', '2 bay leaves', '1 cinnamon stick', 'Saffron soaked in milk', 'Fresh mint leaves', 'Fried onions', 'Ghee', 'Salt to taste']",
+      "steps": "['Soak basmati rice for 30 minutes', 'Marinate paneer with yogurt, ginger-garlic paste, and spices', 'Fry onions until golden brown', 'Cook rice until 70% done with whole spices', 'Layer marinated paneer, rice, fried onions, mint, and saffron milk', 'Cook on high heat for 2 minutes, then simmer for 45 minutes', 'Let it rest for 10 minutes before serving']",
+      "Neutretion": "<p>Per serving: 420 calories, 15g fat, 18g protein, 52g carbohydrates, 3g fiber</p>"
+    },
+    {
+      "name": "Chickpea & Potato Curry",
+      "collection": "collection/vegan-recipes/",
+      "recipie_collection_idx": 2,
+      "image": "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400",
+      "descripition": "A classic Indian chickpea curry made with aromatic spices, tender potatoes, and rich tomato-based gravy.",
+      "ingredients": "['1 tablespoon canola oil', '1 medium onion chopped', '2 garlic cloves minced', '2 teaspoons minced fresh gingerroot', '2 teaspoons ground coriander', '1 teaspoon garam masala', '1 teaspoon chili powder', '1/2 teaspoon salt', '1/2 teaspoon ground cumin', '1/4 teaspoon ground turmeric', '1 can crushed tomatoes', '2 cans chickpeas drained', '1 large baking potato cubed', '2-1/2 cups vegetable stock', '1 tablespoon lime juice', 'Fresh cilantro', 'Cooked rice']",
+      "steps": "['Heat oil in large skillet over medium-high heat', 'Saute onion until tender 2-4 minutes', 'Add garlic ginger and dry seasonings cook 1 minute', 'Stir in tomatoes transfer to slow cooker', 'Add chickpeas potato and stock', 'Cook covered on low 6-8 hours until potato tender', 'Stir in lime juice sprinkle with cilantro', 'Serve with rice']",
+      "Neutretion": "<p>Per serving: 240 calories, 6g fat, 8g protein, 42g carbohydrate, 9g fiber</p>"
+    },
+    {
+      "name": "Crispy Tofu with Black Pepper Sauce",
+      "collection": "collection/vegan-recipes/",
+      "recipie_collection_idx": 3,
+      "image": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400",
+      "descripition": "Crispy golden tofu cubes tossed in a savory black pepper sauce with fresh vegetables.",
+      "ingredients": "['2 tablespoons reduced-sodium soy sauce', '2 tablespoons chili garlic sauce', '1 tablespoon packed brown sugar', '1 tablespoon rice vinegar', '4 green onions', '8 ounces extra-firm tofu drained', '3 tablespoons cornstarch', '6 tablespoons canola oil divided', '8 ounces fresh sugar snap peas', '1 teaspoon freshly ground pepper', '3 garlic cloves minced', '2 teaspoons grated fresh gingerroot']",
+      "steps": "['Mix soy sauce chili garlic sauce brown sugar and rice vinegar', 'Mince white parts of green onions slice green parts', 'Cut tofu into cubes pat dry toss with cornstarch', 'Heat 4 tablespoons oil cook tofu until crisp 5-7 minutes', 'Remove tofu drain on paper towels', 'Heat 1 tablespoon oil stir-fry peas until crisp-tender', 'Heat remaining oil cook pepper 30 seconds', 'Add garlic ginger minced onions stir-fry 30-45 seconds', 'Add sauce mixture cook until thickened', 'Stir in tofu and peas sprinkle with sliced onions']",
+      "Neutretion": "<p>Per serving: 316 calories, 24g fat, 7g protein, 20g carbohydrate, 2g fiber</p>"
+    },
+    {
+      "name": "Margherita Pizza",
+      "collection": "collection/italian-recipes/",
+      "recipie_collection_idx": 4,
+      "image": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400",
+      "descripition": "Classic Italian pizza with fresh tomatoes, mozzarella, and basil on a crispy thin crust.",
+      "ingredients": "['1 pizza dough ball', '1/2 cup pizza sauce', '8 oz fresh mozzarella sliced', '2 large tomatoes sliced', 'Fresh basil leaves', '2 tablespoons olive oil', 'Salt and pepper to taste', 'Parmesan cheese grated']",
+      "steps": "['Preheat oven to 475°F', 'Roll out pizza dough on floured surface', 'Transfer to pizza stone or baking sheet', 'Brush with olive oil', 'Spread pizza sauce evenly', 'Add mozzarella and tomato slices', 'Season with salt and pepper', 'Bake 12-15 minutes until crust is golden', 'Top with fresh basil and parmesan', 'Slice and serve immediately']",
+      "Neutretion": "<p>Per slice: 285 calories, 12g fat, 14g protein, 32g carbohydrate, 2g fiber</p>"
+    },
+    {
+      "name": "Chicken Teriyaki Bowl",
+      "collection": "collection/asian-recipes/",
+      "recipie_collection_idx": 5,
+      "image": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400",
+      "descripition": "Tender grilled chicken glazed with homemade teriyaki sauce served over steamed rice with vegetables.",
+      "ingredients": "['2 chicken breasts', '1/4 cup soy sauce', '2 tablespoons mirin', '2 tablespoons brown sugar', '1 tablespoon rice vinegar', '1 teaspoon sesame oil', '2 cloves garlic minced', '1 teaspoon ginger grated', '2 cups cooked rice', '1 cup broccoli florets', '1 carrot julienned', 'Sesame seeds', 'Green onions sliced']",
+      "steps": "['Mix soy sauce mirin brown sugar vinegar sesame oil garlic and ginger for teriyaki sauce', 'Marinate chicken in half the sauce for 30 minutes', 'Grill chicken 6-7 minutes per side until cooked through', 'Steam broccoli and carrots until tender-crisp', 'Slice chicken and glaze with remaining teriyaki sauce', 'Serve over rice with vegetables', 'Garnish with sesame seeds and green onions']",
+      "Neutretion": "<p>Per serving: 380 calories, 8g fat, 35g protein, 45g carbohydrate, 3g fiber</p>"
+    },
+    {
+      "name": "Mediterranean Quinoa Salad",
+      "collection": "collection/healthy-recipes/",
+      "recipie_collection_idx": 6,
+      "image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400",
+      "descripition": "Fresh and vibrant quinoa salad with cucumbers, tomatoes, olives, and feta cheese in a lemon herb dressing.",
+      "ingredients": "['1 cup quinoa', '2 cups vegetable broth', '1 cucumber diced', '2 cups cherry tomatoes halved', '1/2 red onion thinly sliced', '1/2 cup kalamata olives', '1/2 cup feta cheese crumbled', '1/4 cup olive oil', '2 tablespoons lemon juice', '2 tablespoons fresh parsley', '1 tablespoon fresh oregano', 'Salt and pepper to taste']",
+      "steps": "['Rinse quinoa in cold water', 'Bring vegetable broth to boil add quinoa', 'Reduce heat cover simmer 15 minutes until liquid absorbed', 'Fluff with fork and let cool completely', 'Dice cucumber halve tomatoes slice onion', 'Whisk olive oil lemon juice parsley oregano salt and pepper', 'Combine quinoa vegetables olives and feta', 'Toss with dressing', 'Chill for at least 30 minutes before serving']",
+      "Neutretion": "<p>Per serving: 320 calories, 16g fat, 12g protein, 38g carbohydrate, 5g fiber</p>"
+    }
+  ];
+
   const parseIngredients = (ingredientsStr) => {
     try {
-      // Remove quotes and brackets, then split by comma
-      return ingredientsStr
-        .replace(/^\['?|'?\]$/g, '')
-        .split("', '")
-        .map(ingredient => ingredient.replace(/^'|'$/g, ''));
-    } catch {
+      // Safely handle the ingredients string format
+      const cleanStr = ingredientsStr.replace(/^\[|\]$/g, '');
+      return cleanStr.split('\', \'').map(ingredient => 
+        ingredient.replace(/^\'|\'$/g, '').replace(/^\"|\"$/g, '')
+      );
+    } catch (error) {
+      console.warn('Error parsing ingredients:', error);
       return [];
     }
   };
 
   useEffect(() => {
     const loadRecipes = async () => {
+      setRecipesLoading(true);
+      
       try {
-        setRecipesLoading(true);
-        
-        // Try to load from the uploaded file first
-        const data = JSON.parse(document.querySelector('script[type="application/json"]')?.textContent || '[]');
-        if (data.length > 0) {
-          setRecipes(data);
-          setRecipesError(null);
-        } else {
-          // Fallback to fetch from /data/recipe.json
-          const response = await fetch('/data/recipe.json');
-          if (!response.ok) {
-            throw new Error('Failed to load recipes');
-          }
+        // Try to fetch from public data file
+        const response = await fetch('/data/recipe.json');
+        if (response.ok) {
           const fetchedData = await response.json();
           setRecipes(fetchedData);
           setRecipesError(null);
+        } else {
+          throw new Error('Failed to load external recipes');
         }
       } catch (error) {
-        console.error('Error loading recipes:', error);
-        // Load the recipes from the document data as fallback
-        const fallbackRecipes = [
-  {
-    "name": "Chickpea & Potato Curry",
-    "collection": "collection/vegan-recipes/",
-    "recipie_collection_idx": 1,
-    "image": "https://www.tasteofhome.com/wp-content/uploads/2018/01/Chickpea-Potato-Curry_EXPS_SDDJ17_198294_B08_11_1b-2.jpg",
-    "descripition": "A classic Indian chickpea curry made in a slow cooker with browning onion, ginger and garlic for amazing sauce.",
-    "ingredients": "['1 tablespoon canola oil', '1 medium onion, chopped', '2 garlic cloves, minced', '2 teaspoons minced fresh gingerroot', '2 teaspoons ground coriander', '1 teaspoon garam masala', '1 teaspoon chili powder', '1/2 teaspoon salt', '1/2 teaspoon ground cumin', '1/4 teaspoon ground turmeric', '1 can (15 ounces) crushed tomatoes', '2 cans (15 ounces each) chickpeas or garbanzo beans, rinsed and drained', '1 large baking potato, peeled and cut into 3/4-inch cubes', '2-1/2 cups vegetable stock', '1 tablespoon lime juice', 'Chopped fresh cilantro', 'Hot cooked rice']",
-    "steps": "['In a large skillet, heat oil over medium-high heat; saute onion until tender, 2-4 minutes. Add garlic, ginger and dry seasonings; cook and stir 1 minute. Stir in tomatoes; transfer to a 3- or 4-qt. slow cooker.', 'Stir in chickpeas, potato and stock. Cook, covered, on low until potato is tender and flavors are blended, 6-8 hours.', 'Stir in lime juice; sprinkle with cilantro. Serve with rice.']",
-    "Neutretion": "<p>1-1/4 cups chickpea mixture: 240 calories, 6g fat (0 saturated fat), 0 cholesterol, 767mg sodium, 42g carbohydrate (8g sugars, 9g fiber), 8g protein.</p>"
-  },
-  {
-    "name": "Crispy Tofu with Black Pepper Sauce",
-    "collection": "collection/vegan-recipes/",
-    "recipie_collection_idx": 2,
-    "image": "https://www.tasteofhome.com/wp-content/uploads/2018/01/Crispy-Tofu-with-Black-Pepper-Sauce_EXPS_HCK17_195066_D08_26_2b-6.jpg",
-    "descripition": "Crispy vegetarian bean curd loaded with flavor in a delicious black pepper sauce.",
-    "ingredients": "['2 tablespoons reduced-sodium soy sauce', '2 tablespoons chili garlic sauce', '1 tablespoon packed brown sugar', '1 tablespoon rice vinegar', '4 green onions', '8 ounces extra-firm tofu, drained', '3 tablespoons cornstarch', '6 tablespoons canola oil, divided', '8 ounces fresh sugar snap peas (about 2 cups), trimmed and thinly sliced', '1 teaspoon freshly ground pepper', '3 garlic cloves, minced', '2 teaspoons grated fresh gingerroot']",
-    "steps": "['Mix the first 4 ingredients. Mince white parts of green onions; thinly slice green parts.', 'Cut tofu into 1/2-in. cubes; pat dry with paper towels. Toss tofu with cornstarch. In a large skillet, heat 4 tablespoons oil over medium-high heat. Add tofu; cook until crisp and golden brown, 5-7 minutes, stirring occasionally. Remove from pan; drain on paper towels.', 'In same pan, heat 1 tablespoon oil over medium-high heat. Add peas; stir-fry until crisp-tender, 2-3 minutes. Remove from pan.', 'In same pan, heat remaining 1 tablespoon oil over medium-high heat. Add pepper; cook 30 seconds. Add garlic, ginger and minced green onions; stir-fry for 30-45 seconds. Stir in soy sauce mixture; cook and stir until slightly thickened. Remove from heat; stir in tofu and peas. Sprinkle with sliced green onions.']",
-    "Neutretion": "<p>1 cup: 316 calories, 24g fat (2g saturated fat), 0 cholesterol, 583mg sodium, 20g carbohydrate (8g sugars, 2g fiber), 7g protein.</p>"
-  }
-];
+        console.log('Using embedded recipes:', error.message);
+        // Use embedded fallback recipes
         setRecipes(fallbackRecipes);
         setRecipesError(null);
       } finally {
@@ -163,7 +200,7 @@ const App = () => {
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
-        articleUrl: `https://www.google.com/search?q=${encodeURIComponent(recipe.name + ' recipe cooking instructions')}`,
+        articleUrl: createSearchUrl(recipe.name + ' recipe cooking instructions'),
         aiGenerated: aiGenerated
       });
 
@@ -177,7 +214,7 @@ const App = () => {
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
-        articleUrl: `https://www.google.com/search?q=${encodeURIComponent(recipe.name + ' recipe')}`,
+        articleUrl: createSearchUrl(recipe.name + ' recipe'),
         error: error.message.includes('API_KEY_MISSING') || error.message.includes('API key') ? 
           "SETUP_REQUIRED" :
           "AI connection unavailable. Showing intelligent estimates.",
@@ -186,6 +223,17 @@ const App = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // CSP-compliant URL creation helper
+  const createSearchUrl = (searchTerm) => {
+    const baseUrl = 'https://www.google.com/search?q=';
+    return baseUrl + encodeURIComponent(searchTerm);
+  };
+
+  const createYouTubeUrl = (searchTerm) => {
+    const baseUrl = 'https://www.youtube.com/results?search_query=';
+    return baseUrl + encodeURIComponent(searchTerm);
   };
 
   // Helper function to estimate prep time
@@ -202,10 +250,11 @@ const App = () => {
     let baseCalories = 200;
     
     // Adjust based on recipe type
-    if (name.includes('curry') || name.includes('rice')) baseCalories = 300;
+    if (name.includes('curry') || name.includes('rice') || name.includes('biryani')) baseCalories = 300;
     if (name.includes('soup') || name.includes('salad')) baseCalories = 150;
     if (name.includes('pasta') || name.includes('noodle')) baseCalories = 350;
     if (name.includes('bread') || name.includes('pizza')) baseCalories = 280;
+    if (name.includes('chicken') || name.includes('meat')) baseCalories = 320;
     
     return {
       calories: baseCalories + ingredients.length * 10,
@@ -227,7 +276,11 @@ const App = () => {
       'quinoa': { substitute: 'brown rice', ratio: '1:1' },
       'tofu': { substitute: 'tempeh', ratio: '1:1' },
       'coconut milk': { substitute: 'cashew milk', ratio: '1:1' },
-      'ginger': { substitute: 'ground ginger', ratio: '1 inch:1/4 tsp' }
+      'ginger': { substitute: 'ground ginger', ratio: '1 inch:1/4 tsp' },
+      'paneer': { substitute: 'halloumi cheese', ratio: '1:1' },
+      'chicken': { substitute: 'tofu or seitan', ratio: '1:1' },
+      'mozzarella': { substitute: 'provolone cheese', ratio: '1:1' },
+      'soy sauce': { substitute: 'tamari or coconut aminos', ratio: '1:1' }
     };
 
     return mainIngredients.map(ingredient => {
@@ -249,6 +302,10 @@ const App = () => {
     setSearchResults([]);
     setShowResults(false);
     setApiKeyError(false);
+  };
+
+  const handleImageError = (event) => {
+    event.target.style.display = 'none';
   };
 
   return (
@@ -306,7 +363,7 @@ const App = () => {
           <div className="text-center py-16">
             <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-2xl mx-auto">
               <p className="text-red-600 text-lg">{recipesError}</p>
-              <p className="text-gray-600 mt-2">Using fallback recipes for demonstration.</p>
+              <p className="text-gray-600 mt-2">Using embedded recipes for demonstration.</p>
             </div>
           </div>
         ) : !selectedRecipe ? (
@@ -331,7 +388,7 @@ const App = () => {
                       setSearchQuery(e.target.value);
                       handleSearch(e.target.value);
                     }}
-                    placeholder="I want to eat chickpea curry..."
+                    placeholder="I want to eat paneer biryani..."
                     className="w-full pl-12 pr-4 py-4 text-lg border-2 border-transparent rounded-full shadow-lg focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
                   />
                 </div>
@@ -349,22 +406,21 @@ const App = () => {
                           <div className="flex-1">
                             <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
                             <p className="text-sm text-gray-600 line-clamp-2">{recipe.descripition}</p>
-                            {recipe.image && (
-                              <div className="mt-2">
-                                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                                  Vegan Recipe
-                                </span>
-                              </div>
-                            )}
+                            <div className="mt-2">
+                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                {recipe.collection.includes('vegan') ? 'Vegan' : 
+                                 recipe.collection.includes('indian') ? 'Indian' :
+                                 recipe.collection.includes('italian') ? 'Italian' :
+                                 recipe.collection.includes('asian') ? 'Asian' : 'Healthy'} Recipe
+                              </span>
+                            </div>
                           </div>
                           {recipe.image && (
                             <img 
                               src={recipe.image} 
                               alt={recipe.name}
                               className="w-16 h-16 object-cover rounded-lg ml-4"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                              }}
+                              onError={handleImageError}
                             />
                           )}
                           <Utensils className="h-5 w-5 text-gray-400 ml-2" />
@@ -403,9 +459,7 @@ const App = () => {
                   src={selectedRecipe.image} 
                   alt={selectedRecipe.name}
                   className="w-full h-64 object-cover rounded-xl mb-6"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
+                  onError={handleImageError}
                 />
               )}
               
@@ -514,7 +568,7 @@ const App = () => {
                       <BookOpen className="h-4 w-4" />
                     </a>
                     <a
-                      href={`https://www.youtube.com/results?search_query=${encodeURIComponent(selectedRecipe.name + ' recipe cooking tutorial')}`}
+                      href={createYouTubeUrl(selectedRecipe.name + ' recipe cooking tutorial')}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"

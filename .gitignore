@@ -83,4 +83,4 @@ csp-nonce.txt
 *.tmp
 
 # Build analysis files
-stats.html
+stats.html  
