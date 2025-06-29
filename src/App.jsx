@@ -98,9 +98,7 @@ const App = () => {
       const HF_API_KEY = import.meta.env.VITE_HF_API_KEY || 'your_hugging_face_api_key_here';
 
       
-      if (HF_API_KEY === 'your_hugging_face_api_key_here') {
-        throw new Error('Please set your Hugging Face API key in environment variables');
-      }
+  // Removed duplicate 'response' declaration here
 
       const prompt = `You are a professional chef and nutritionist. For the recipe "${recipe.name}" with ingredients: ${ingredients.join(', ')}, please provide:
 
@@ -119,7 +117,7 @@ Format your response as JSON:
   "articleUrl": "https://example.com/recipe"
 }`;
 
-      const response = await fetch('https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1', {
+      const response = await fetch('https://api-inference.huggingface.co/models/gpt2', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${HF_API_KEY}`,
