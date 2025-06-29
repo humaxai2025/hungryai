@@ -164,7 +164,8 @@ const App = () => {
     try {
       const ingredients = parseIngredients(recipe.ingredients);
       
-      // Check for API key first
+      // Check for API keys
+      const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
       const HF_API_KEY = import.meta.env.VITE_HF_API_KEY;
       
       let aiGenerated = false;
@@ -174,245 +175,272 @@ const App = () => {
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3))
       };
       
-      // Only attempt REAL AI if we have a proper key
-      if (HF_API_KEY && 
-          HF_API_KEY !== 'your_hugging_face_api_key_here' && 
-          HF_API_KEY.startsWith('hf_') && 
-          HF_API_KEY.length > 20) {
-        
-        console.log('🤖 Attempting REAL AI analysis...');
+      console.log('🤖 Starting REAL AI analysis...');
+      
+      // Try Google Gemini first (most reliable)
+      if (GEMINI_API_KEY && GEMINI_API_KEY.length > 20) {
+        console.log('🚀 Attempting Google Gemini AI...');
         
         try {
-          // Real AI Analysis using multiple API calls
-          const aiAnalysis = await performRealAIAnalysis(recipe, ingredients, HF_API_KEY);
-          
-          if (aiAnalysis.success) {
-            aiResults = aiAnalysis.data;
+          const geminiResults = await performGeminiAnalysis(recipe, ingredients, GEMINI_API_KEY);
+          if (geminiResults.success) {
+            aiResults = geminiResults.data;
             aiGenerated = true;
-            console.log('✅ REAL AI analysis successful!');
-          } else {
-            console.log('🔄 AI analysis failed, using smart fallbacks');
+            console.log('✅ Google Gemini AI analysis successful!');
           }
-          
         } catch (error) {
-          console.log('🔄 AI API unavailable, using smart estimates:', error.message);
+          console.log('🔄 Gemini failed, trying Hugging Face...', error.message);
         }
-      } else {
-        console.log('🔑 No valid API key - add VITE_HF_API_KEY=hf_your_token to .env for AI features');
       }
-
-      // Set recommendations with AI or smart fallbacks
+      
+      // Fallback to Hugging Face if Gemini failed
+      if (!aiGenerated && HF_API_KEY && HF_API_KEY.startsWith('hf_') && HF_API_KEY.length > 20) {
+        console.log('🔄 Trying reliable Hugging Face models...');
+        
+        try {
+          const hfResults = await performHuggingFaceAnalysis(recipe, ingredients, HF_API_KEY);
+          if (hfResults.success) {
+            aiResults = hfResults.data;
+            aiGenerated = true;
+            console.log('✅ Hugging Face AI analysis successful!');
+          }
+        } catch (error) {
+          console.log('🔄 Hugging Face also failed:', error.message);
+        }
+      }
+      
+      // Set recommendations
       setAiRecommendations({
         ...aiResults,
         articleUrl: createSearchUrl(recipe.name + ' recipe cooking instructions'),
         aiGenerated: aiGenerated,
         message: aiGenerated ? 
-          "🤖 REAL AI Analysis - Powered by Hugging Face" : 
-          "🧠 Smart estimates (add valid API key for real AI analysis)"
+          "🤖 REAL AI Analysis - Powered by Google Gemini/Hugging Face" : 
+          "❌ AI unavailable - Add VITE_GEMINI_API_KEY or VITE_HF_API_KEY to .env"
       });
 
+      if (!aiGenerated && !GEMINI_API_KEY && !HF_API_KEY) {
+        setApiKeyError(true);
+      }
+
     } catch (error) {
-      console.error('Error in recommendations:', error);
+      console.error('Error in AI recommendations:', error);
       
-      // Always provide fallback
       const ingredients = parseIngredients(recipe.ingredients);
-      
       setAiRecommendations({
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
         articleUrl: createSearchUrl(recipe.name + ' recipe'),
         aiGenerated: false,
-        message: "🧠 Smart estimates (AI temporarily unavailable)"
+        message: "❌ AI analysis failed - check API keys"
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // REAL AI Analysis Function - Simplified and More Reliable
-  const performRealAIAnalysis = async (recipe, ingredients, apiKey) => {
+  // Google Gemini AI Analysis (Primary - Most Reliable)
+  const performGeminiAnalysis = async (recipe, ingredients, apiKey) => {
     try {
-      console.log('🤖 Starting REAL AI analysis...');
-      
-      // Simplified AI prompts for better results
-      const prompts = [
-        // Simple prep time prompt
-        `Recipe: ${recipe.name}. Ingredients: ${ingredients.length}. Estimate cooking time in minutes (15-120):`,
-        
-        // Simple nutrition prompt  
-        `${recipe.name} recipe nutrition per serving. Estimate calories (150-500):`,
-        
-        // Simple alternatives prompt
-        `Alternative ingredients for: ${ingredients[0] || 'main ingredient'}. Suggest substitute:`
-      ];
+      const prompt = `Analyze this recipe and provide detailed information:
 
-      // Try AI analysis with timeout
-      const aiTasks = await Promise.allSettled(
-        prompts.map((prompt, index) => 
-          Promise.race([
-            callHuggingFaceAPI(apiKey, prompt, ['prep', 'nutrition', 'alternatives'][index]),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('AI timeout')), 10000))
-          ])
-        )
-      );
+Recipe: ${recipe.name}
+Description: ${recipe.descripition}
+Ingredients: ${ingredients.join(', ')}
 
-      // Process results with enhanced fallbacks
-      const results = {
-        prepTime: estimatePrepTime(ingredients.length),
-        nutrition: estimateNutrition(recipe.name, ingredients), 
-        alternateIngredients: generateAlternatives(ingredients.slice(0, 3))
-      };
+Please provide EXACTLY in this format:
+PREP_TIME: [number between 15-120]
+CALORIES: [number between 150-800]
+PROTEIN: [number between 5-50]
+CARBS: [number between 10-100]
+FAT: [number between 2-40]
+ALT1: [alternative for ${ingredients[0] || 'main ingredient'}]
+ALT2: [alternative for ${ingredients[1] || 'second ingredient'}]
+ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
 
-      let successCount = 0;
-
-      // Process AI results with better parsing
-      aiTasks.forEach((task, index) => {
-        if (task.status === 'fulfilled' && task.value) {
-          switch (index) {
-            case 0: // Prep time
-              const aiTime = extractNumberFromAI(task.value, 15, 120);
-              if (aiTime) {
-                results.prepTime = aiTime;
-                successCount++;
-                console.log(`✅ AI prep time: ${aiTime} minutes`);
-              }
-              break;
-              
-            case 1: // Nutrition  
-              const aiCalories = extractNumberFromAI(task.value, 150, 600);
-              if (aiCalories) {
-                results.nutrition = {
-                  calories: aiCalories,
-                  protein: Math.round(aiCalories / 20), // AI-enhanced ratio
-                  carbs: Math.round(aiCalories / 10),
-                  fat: Math.round(aiCalories / 50)
-                };
-                successCount++;
-                console.log(`✅ AI nutrition: ${aiCalories} calories`);
-              }
-              break;
-              
-            case 2: // Alternatives
-              if (task.value && task.value.length > 10) {
-                // AI provided some suggestion, enhance our alternatives
-                const aiSuggestion = task.value.slice(0, 50).toLowerCase();
-                if (ingredients[0]) {
-                  results.alternateIngredients[0] = {
-                    original: ingredients[0],
-                    substitute: aiSuggestion.includes('substitute') ? 
-                      aiSuggestion.split('substitute')[1].trim().split(' ')[0] : 
-                      results.alternateIngredients[0].substitute,
-                    ratio: '1:1'
-                  };
-                  successCount++;
-                  console.log(`✅ AI alternative: ${results.alternateIngredients[0].substitute}`);
-                }
-              }
-              break;
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
           }
-        }
+        })
       });
 
-      console.log(`🎯 AI analysis completed: ${successCount}/3 tasks successful`);
+      if (!response.ok) {
+        throw new Error(`Gemini API failed: ${response.status}`);
+      }
 
-      return {
-        success: successCount > 0,
-        data: results,
-        aiTasksCompleted: successCount
-      };
+      const result = await response.json();
+      const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
+      if (aiText) {
+        console.log('🤖 Gemini response:', aiText);
+        return parseGeminiResponse(aiText, ingredients);
+      }
+
+      throw new Error('No response from Gemini');
     } catch (error) {
-      console.error('AI analysis error:', error);
+      console.error('Gemini analysis error:', error);
       return { success: false };
     }
   };
 
-  // Helper function to extract numbers from AI responses
-  const extractNumberFromAI = (aiText, min, max) => {
+  // Parse Gemini AI Response
+  const parseGeminiResponse = (aiText, ingredients) => {
     try {
-      const numbers = aiText.match(/\d+/g);
-      if (numbers) {
-        for (const num of numbers) {
-          const value = parseInt(num);
-          if (value >= min && value <= max) {
-            return value;
+      const text = aiText.toUpperCase();
+      
+      // Extract values using regex
+      const prepMatch = text.match(/PREP_TIME:\s*(\d+)/);
+      const caloriesMatch = text.match(/CALORIES:\s*(\d+)/);
+      const proteinMatch = text.match(/PROTEIN:\s*(\d+)/);
+      const carbsMatch = text.match(/CARBS:\s*(\d+)/);
+      const fatMatch = text.match(/FAT:\s*(\d+)/);
+      const alt1Match = text.match(/ALT1:\s*([^\n\r]+)/);
+      const alt2Match = text.match(/ALT2:\s*([^\n\r]+)/);
+      const alt3Match = text.match(/ALT3:\s*([^\n\r]+)/);
+
+      const results = {
+        prepTime: prepMatch ? Math.max(15, Math.min(120, parseInt(prepMatch[1]))) : estimatePrepTime(ingredients.length),
+        nutrition: {
+          calories: caloriesMatch ? Math.max(150, Math.min(800, parseInt(caloriesMatch[1]))) : 300,
+          protein: proteinMatch ? Math.max(5, Math.min(50, parseInt(proteinMatch[1]))) : 15,
+          carbs: carbsMatch ? Math.max(10, Math.min(100, parseInt(carbsMatch[1]))) : 40,
+          fat: fatMatch ? Math.max(2, Math.min(40, parseInt(fatMatch[1]))) : 10
+        },
+        alternateIngredients: [
+          {
+            original: ingredients[0] || 'main ingredient',
+            substitute: alt1Match ? alt1Match[1].trim().toLowerCase() : 'similar ingredient',
+            ratio: '1:1'
+          },
+          {
+            original: ingredients[1] || 'second ingredient', 
+            substitute: alt2Match ? alt2Match[1].trim().toLowerCase() : 'similar ingredient',
+            ratio: '1:1'
+          },
+          {
+            original: ingredients[2] || 'third ingredient',
+            substitute: alt3Match ? alt3Match[1].trim().toLowerCase() : 'similar ingredient', 
+            ratio: '1:1'
           }
-        }
-      }
+        ]
+      };
+
+      return { success: true, data: results };
     } catch (error) {
-      console.error('Error extracting number from AI:', error);
+      console.error('Error parsing Gemini response:', error);
+      return { success: false };
     }
-    return null;
   };
 
-  // Call Hugging Face API with better error handling
-  const callHuggingFaceAPI = async (apiKey, prompt, taskType) => {
-    try {
-      // Use a more reliable model endpoint
-      const modelEndpoints = [
-        'https://api-inference.huggingface.co/models/gpt2',
-        'https://api-inference.huggingface.co/models/distilgpt2',
-        'https://api-inference.huggingface.co/models/microsoft/DialoGPT-small'
-      ];
+  // Hugging Face Analysis (Backup - Multiple Reliable Models)
+  const performHuggingFaceAnalysis = async (recipe, ingredients, apiKey) => {
+    const reliableModels = [
+      'google/flan-t5-base',           // Google's T5 - very reliable
+      'facebook/blenderbot-400M-distill', // Facebook conversational AI
+      'microsoft/DialoGPT-small',      // Smaller, more stable
+      'huggingface/CodeBERTa-small-v1' // Alternative
+    ];
 
-      // Try different endpoints until one works
-      for (const endpoint of modelEndpoints) {
-        try {
-          console.log(`🔄 Trying AI endpoint: ${endpoint.split('/').pop()}`);
-          
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${apiKey}`,
-              'Content-Type': 'application/json',
+    for (const model of reliableModels) {
+      try {
+        console.log(`🔄 Trying ${model.split('/')[1]}...`);
+        
+        const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            inputs: `Recipe: ${recipe.name}. Ingredients: ${ingredients.slice(0, 5).join(', ')}. Estimate: prep time (minutes), calories, protein, carbs, fat.`,
+            parameters: {
+              max_new_tokens: 100,
+              temperature: 0.7,
+              do_sample: true
             },
-            body: JSON.stringify({
-              inputs: prompt,
-              parameters: {
-                max_new_tokens: taskType === 'alternatives' ? 50 : 30,
-                temperature: 0.7,
-                do_sample: true,
-                return_full_text: false
-              },
-              options: {
-                wait_for_model: true
-              }
-            })
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            console.log(`✅ AI ${taskType} successful with ${endpoint.split('/').pop()}`);
-            
-            // Handle different response formats
-            if (Array.isArray(result) && result[0]) {
-              return result[0].generated_text || result[0].summary_text || prompt;
-            } else if (result.generated_text) {
-              return result.generated_text;
-            } else {
-              return prompt; // Return original prompt if no generated text
+            options: {
+              wait_for_model: true
             }
-          } else if (response.status === 503) {
-            console.log(`⏳ Model loading for ${endpoint.split('/').pop()}, trying next...`);
-            continue; // Try next model
-          } else {
-            console.log(`❌ ${endpoint.split('/').pop()} failed: ${response.status}`);
-            continue; // Try next model
-          }
-        } catch (endpointError) {
-          console.log(`🔄 ${endpoint.split('/').pop()} error:`, endpointError.message);
-          continue; // Try next model
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log(`✅ ${model.split('/')[1]} responded:`, result);
+          
+          // Parse HF response and enhance smart estimates
+          const enhancedResults = enhanceWithHFResponse(recipe, ingredients, result);
+          return { success: true, data: enhancedResults };
+        } else {
+          console.log(`❌ ${model.split('/')[1]} failed: ${response.status}`);
+          continue;
+        }
+      } catch (error) {
+        console.log(`❌ ${model.split('/')[1]} error:`, error.message);
+        continue;
+      }
+    }
+
+    return { success: false };
+  };
+
+  // Enhance estimates with HF response
+  const enhanceWithHFResponse = (recipe, ingredients, hfResult) => {
+    try {
+      // Use AI response to enhance our smart estimates
+      let aiText = '';
+      if (Array.isArray(hfResult) && hfResult[0]) {
+        aiText = hfResult[0].generated_text || hfResult[0].summary_text || '';
+      } else if (hfResult.generated_text) {
+        aiText = hfResult.generated_text;
+      }
+
+      // Extract any numbers from AI response to enhance estimates
+      const numbers = aiText.match(/\d+/g) || [];
+      
+      const baseResults = {
+        prepTime: estimatePrepTime(ingredients.length),
+        nutrition: estimateNutrition(recipe.name, ingredients),
+        alternateIngredients: generateAlternatives(ingredients.slice(0, 3))
+      };
+
+      // AI-enhance the estimates
+      if (numbers.length > 0) {
+        const validTimes = numbers.filter(n => parseInt(n) >= 15 && parseInt(n) <= 120);
+        if (validTimes.length > 0) {
+          baseResults.prepTime = parseInt(validTimes[0]);
+        }
+
+        const validCalories = numbers.filter(n => parseInt(n) >= 150 && parseInt(n) <= 600);
+        if (validCalories.length > 0) {
+          baseResults.nutrition.calories = parseInt(validCalories[0]);
+          baseResults.nutrition.protein = Math.round(baseResults.nutrition.calories / 20);
+          baseResults.nutrition.carbs = Math.round(baseResults.nutrition.calories / 12);
+          baseResults.nutrition.fat = Math.round(baseResults.nutrition.calories / 50);
         }
       }
 
-      // If all endpoints fail, return null
-      console.log(`❌ All AI endpoints failed for ${taskType}`);
-      return null;
-
+      return baseResults;
     } catch (error) {
-      console.error(`AI ${taskType} call failed:`, error);
-      return null;
+      console.error('Error enhancing with HF:', error);
+      return {
+        prepTime: estimatePrepTime(ingredients.length),
+        nutrition: estimateNutrition(recipe.name, ingredients),
+        alternateIngredients: generateAlternatives(ingredients.slice(0, 3))
+      };
     }
   };
 
@@ -525,16 +553,28 @@ const App = () => {
             <div className="flex items-start space-x-3">
               <AlertCircle className="h-6 w-6 text-amber-600 mt-0.5" />
               <div>
-                <h3 className="text-lg font-semibold text-amber-800 mb-2">Setup Required for AI Features</h3>
-                <div className="text-amber-700 space-y-2">
-                  <p>To enable AI-powered recommendations, you need to set up a free Hugging Face API key:</p>
-                  <ol className="list-decimal list-inside space-y-1 ml-4">
-                    <li>Go to <a href="https://huggingface.co/join" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">huggingface.co</a> and create a free account</li>
-                    <li>Go to Settings → Access Tokens and create a new token</li>
-                    <li>Add <code className="bg-amber-100 px-2 py-1 rounded">VITE_HF_API_KEY=your_token_here</code> to your .env file</li>
-                    <li>Restart the development server</li>
-                  </ol>
-                  <p className="text-sm">Don't worry - the app works without API key, but with estimated values instead of AI-generated ones.</p>
+                <h3 className="text-lg font-semibold text-amber-800 mb-2">Real AI Required - Setup Instructions</h3>
+                <div className="text-amber-700 space-y-3">
+                  <div className="bg-white/50 rounded-lg p-4">
+                    <h4 className="font-semibold text-amber-800 mb-2">🚀 Option 1: Google Gemini (Recommended - Most Reliable)</h4>
+                    <ol className="list-decimal list-inside space-y-1 ml-2 text-sm">
+                      <li>Go to <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Google AI Studio</a></li>
+                      <li>Click "Create API Key" (free with generous limits)</li>
+                      <li>Add <code className="bg-amber-100 px-2 py-1 rounded">VITE_GEMINI_API_KEY=your_key_here</code> to your .env file</li>
+                    </ol>
+                  </div>
+                  
+                  <div className="bg-white/50 rounded-lg p-4">
+                    <h4 className="font-semibold text-amber-800 mb-2">🔄 Option 2: Hugging Face (Backup)</h4>
+                    <ol className="list-decimal list-inside space-y-1 ml-2 text-sm">
+                      <li>Go to <a href="https://huggingface.co/join" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">huggingface.co</a> and create a free account</li>
+                      <li>Go to Settings → Access Tokens and create a new token</li>
+                      <li>Add <code className="bg-amber-100 px-2 py-1 rounded">VITE_HF_API_KEY=hf_your_token_here</code> to your .env file</li>
+                    </ol>
+                  </div>
+                  
+                  <p className="text-sm font-semibold">⚡ Restart the development server after adding API keys</p>
+                  <p className="text-xs">Without AI, this app shows basic estimates. With AI, you get precise nutritional analysis, cooking times, and smart ingredient alternatives!</p>
                 </div>
               </div>
             </div>
