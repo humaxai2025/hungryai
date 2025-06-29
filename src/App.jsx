@@ -22,13 +22,13 @@ const App = () => {
   const [showResults, setShowResults] = useState(false);
   const [apiKeyError, setApiKeyError] = useState(false);
 
-  // Embedded recipe data to avoid CSP issues - using data URLs for reliable images
+  // Embedded recipe data - Clean recipes without hardcoded cultural information
   const fallbackRecipes = [
     {
       "name": "Paneer Biryani",
       "collection": "collection/indian-recipes/",
       "recipie_collection_idx": 1,
-      "image": null, // Removed problematic external image
+      "image": null, // Will trigger AI image generation
       "descripition": "A fragrant and flavorful rice dish with marinated paneer, aromatic spices, and basmati rice layered to perfection.",
       "ingredients": "['2 cups basmati rice', '250g paneer cubes', '1 large onion sliced', '1/2 cup yogurt', '2 tbsp ginger-garlic paste', '1 tsp red chili powder', '1/2 tsp turmeric', '1 tsp garam masala', '4-5 green cardamom', '2 bay leaves', '1 cinnamon stick', 'Saffron soaked in milk', 'Fresh mint leaves', 'Fried onions', 'Ghee', 'Salt to taste']",
       "steps": "['Soak basmati rice for 30 minutes', 'Marinate paneer with yogurt, ginger-garlic paste, and spices', 'Fry onions until golden brown', 'Cook rice until 70% done with whole spices', 'Layer marinated paneer, rice, fried onions, mint, and saffron milk', 'Cook on high heat for 2 minutes, then simmer for 45 minutes', 'Let it rest for 10 minutes before serving']",
@@ -114,8 +114,8 @@ const App = () => {
           throw new Error('Failed to load external recipes');
         }
       } catch (error) {
-        console.log('Using embedded recipes:', error.message);
-        // Use embedded fallback recipes
+        console.log('Using embedded recipes with rich cultural context:', error.message);
+        // Use embedded fallback recipes with cultural information
         setRecipes(fallbackRecipes);
         setRecipesError(null);
       } finally {
@@ -247,6 +247,7 @@ const App = () => {
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
+        culturalInfo: null, // No cultural info if AI completely fails
         articleUrl: createSearchUrl(recipe.name + ' recipe'),
         aiGenerated: false,
         message: "❌ AI analysis failed - check API keys"
@@ -342,10 +343,10 @@ const App = () => {
     }
   };
 
-  // Google Gemini AI Analysis (Primary - Most Reliable)
+  // Google Gemini AI Analysis (Primary - Most Reliable) - 100% AI Generated
   const performGeminiAnalysis = async (recipe, ingredients, apiKey) => {
     try {
-      const prompt = `Analyze this recipe and provide detailed information:
+      const prompt = `Analyze this recipe and provide detailed information. Research the cultural background and provide authentic information:
 
 Recipe: ${recipe.name}
 Description: ${recipe.descripition}
@@ -359,7 +360,13 @@ CARBS: [number between 10-100]
 FAT: [number between 2-40]
 ALT1: [alternative for ${ingredients[0] || 'main ingredient'}]
 ALT2: [alternative for ${ingredients[1] || 'second ingredient'}]
-ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
+ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]
+ORIGIN: [specific country/region of origin with historical context]
+HISTORY: [detailed 2-3 sentence history of this dish including dates and cultural development]
+CULTURAL: [cultural significance, traditions, and symbolism in the origin culture]
+SEASON: [traditional season, festivals, or occasions when this dish is eaten]
+SERVING: [authentic traditional way this dish is served in its culture of origin]
+TIPS: [authentic cultural cooking tips and traditional techniques from the culture]`;
 
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
         method: 'POST',
@@ -371,10 +378,10 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
             parts: [{ text: prompt }]
           }],
           generationConfig: {
-            temperature: 0.7,
+            temperature: 0.3, // Lower temperature for more factual information
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 1024,
+            maxOutputTokens: 2048,
           }
         })
       });
@@ -387,8 +394,8 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
       const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
       if (aiText) {
-        console.log('🤖 Gemini response:', aiText);
-        return parseGeminiResponse(aiText, ingredients);
+        console.log('🤖 Gemini cultural analysis response:', aiText);
+        return parseGeminiResponse(aiText, ingredients, recipe);
       }
 
       throw new Error('No response from Gemini');
@@ -398,12 +405,12 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
     }
   };
 
-  // Parse Gemini AI Response
-  const parseGeminiResponse = (aiText, ingredients) => {
+  // Parse Gemini AI Response - Extract Cultural Information from AI
+  const parseGeminiResponse = (aiText, ingredients, recipe) => {
     try {
       const text = aiText.toUpperCase();
       
-      // Extract values using regex
+      // Extract nutritional values using regex
       const prepMatch = text.match(/PREP_TIME:\s*(\d+)/);
       const caloriesMatch = text.match(/CALORIES:\s*(\d+)/);
       const proteinMatch = text.match(/PROTEIN:\s*(\d+)/);
@@ -412,6 +419,14 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
       const alt1Match = text.match(/ALT1:\s*([^\n\r]+)/);
       const alt2Match = text.match(/ALT2:\s*([^\n\r]+)/);
       const alt3Match = text.match(/ALT3:\s*([^\n\r]+)/);
+      
+      // Extract cultural information from AI - case insensitive
+      const originMatch = aiText.match(/ORIGIN:\s*([^\n\r]+)/i);
+      const historyMatch = aiText.match(/HISTORY:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
+      const culturalMatch = aiText.match(/CULTURAL:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
+      const seasonMatch = aiText.match(/SEASON:\s*([^\n\r]+)/i);
+      const servingMatch = aiText.match(/SERVING:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
+      const tipsMatch = aiText.match(/TIPS:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
 
       const results = {
         prepTime: prepMatch ? Math.max(15, Math.min(120, parseInt(prepMatch[1]))) : estimatePrepTime(ingredients.length),
@@ -437,7 +452,16 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
             substitute: alt3Match ? alt3Match[1].trim().toLowerCase() : 'similar ingredient', 
             ratio: '1:1'
           }
-        ]
+        ],
+        // 100% AI-Generated Cultural Information
+        culturalInfo: originMatch || historyMatch || culturalMatch || seasonMatch || servingMatch || tipsMatch ? {
+          origin: originMatch ? originMatch[1].trim() : 'Origin information not available',
+          history: historyMatch ? historyMatch[1].trim() : 'Historical information not available',
+          significance: culturalMatch ? culturalMatch[1].trim() : 'Cultural significance not available',
+          season: seasonMatch ? seasonMatch[1].trim() : 'Seasonal information not available',
+          serving: servingMatch ? servingMatch[1].trim() : 'Traditional serving information not available',
+          tips: tipsMatch ? tipsMatch[1].trim() : 'Cultural cooking tips not available'
+        } : null // No cultural info if AI didn't provide it
       };
 
       return { success: true, data: results };
@@ -447,7 +471,160 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
     }
   };
 
-  // Hugging Face Analysis (Backup - Multiple Reliable Models)
+  // Fallback cultural information functions
+  const getCulturalOrigin = (ingredients, recipe) => {
+    // Use embedded cultural context if available
+    if (recipe?.culturalContext?.origin) {
+      return recipe.culturalContext.origin;
+    }
+    
+    const culturalMarkers = {
+      'paneer': 'Northern India (Mughal Empire)',
+      'chickpeas': 'Indian Subcontinent & Middle East',
+      'tofu': 'China (Han Dynasty)',
+      'mozzarella': 'Naples, Italy', 
+      'soy sauce': 'China',
+      'quinoa': 'Andes Mountains (Peru & Bolivia)',
+      'garam masala': 'Indian Subcontinent',
+      'teriyaki': 'Japan',
+      'olive oil': 'Mediterranean Basin',
+      'coconut': 'Southeast Asia & Pacific Islands',
+      'basmati rice': 'Indian Subcontinent',
+      'feta cheese': 'Greece',
+      'oregano': 'Mediterranean'
+    };
+
+    for (const ingredient of ingredients) {
+      for (const [key, origin] of Object.entries(culturalMarkers)) {
+        if (ingredient.toLowerCase().includes(key)) {
+          return origin;
+        }
+      }
+    }
+    return 'Global fusion cuisine - a beautiful blend of world traditions';
+  };
+
+  const getCulturalHistory = (ingredients, recipe) => {
+    // Use embedded cultural context if available
+    if (recipe?.culturalContext?.history) {
+      return recipe.culturalContext.history;
+    }
+    
+    if (ingredients.some(i => i.toLowerCase().includes('paneer') || i.toLowerCase().includes('biryani'))) {
+      return 'Biryani was brought to India by Persian merchants and Mughal rulers in the 16th century. This aromatic rice dish represents the fusion of Persian cooking techniques with Indian spices and ingredients, becoming a symbol of royal cuisine.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('chickpeas') || i.toLowerCase().includes('chole'))) {
+      return 'Chickpeas have been cultivated for over 7,000 years, originating in the Middle East. They spread to India through ancient trade routes and became central to Punjabi cuisine, providing essential protein in vegetarian diets.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('tofu'))) {
+      return 'Tofu was invented in China over 2,000 years ago during the Han Dynasty. Buddhist monks adopted it as a meat substitute, spreading the technique throughout Asia. It represents mindful, plant-based eating in Eastern philosophy.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('mozzarella') || i.toLowerCase().includes('pizza'))) {
+      return 'Pizza Margherita was created in 1889 in Naples by pizzaiolo Raffaele Esposito to honor Queen Margherita of Savoy. The red tomatoes, white mozzarella, and green basil represented the Italian flag.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('teriyaki'))) {
+      return 'Teriyaki cooking technique originated in 17th century Japan. "Teri" means glaze and "yaki" means grilled. Originally used for fish, it spread to other proteins and became internationally popular in the 1960s.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('quinoa'))) {
+      return 'Quinoa has been cultivated in the Andes for over 5,000 years. The Incas called it "chisaya mama" (mother of all grains) and considered it sacred. It only gained global recognition in the 21st century as a superfood.';
+    }
+    return 'This dish represents the beautiful evolution of global cuisine, where traditional techniques meet modern ingredients and cross-cultural influences create new culinary traditions.';
+  };
+
+  const getCulturalSignificance = (ingredients, recipe) => {
+    // Use embedded cultural context if available
+    if (recipe?.culturalContext?.significance) {
+      return recipe.culturalContext.significance;
+    }
+    
+    if (ingredients.some(i => i.toLowerCase().includes('paneer') || i.toLowerCase().includes('biryani'))) {
+      return 'In Indian culture, biryani symbolizes abundance, celebration, and hospitality. It represents the vegetarian principle of ahimsa (non-violence) while showcasing the rich Mughal heritage. Often prepared for weddings, festivals, and important family gatherings.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('chickpeas'))) {
+      return 'Chickpeas represent sustenance and community in Indian culture. This dish embodies the principle of "sattvic" (pure) food in Hindu philosophy and is often prepared during religious fasting periods and community kitchens (langars).';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('tofu'))) {
+      return 'In Buddhist tradition, tofu represents compassion and mindfulness - providing nourishment without harm. It symbolizes the philosophy of simple living and respect for all life forms.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('rice'))) {
+      return 'Rice is considered sacred in many Asian cultures, symbolizing life, fertility, and prosperity. It forms the foundation of meals and is central to cultural ceremonies and hospitality.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('olive oil'))) {
+      return 'In Mediterranean culture, olive oil represents peace, wisdom, and the connection to ancient traditions. The olive tree is sacred, symbolizing endurance and the Mediterranean way of life.';
+    }
+    return 'This dish carries the stories and traditions of its culture, connecting us to generations of cooks who perfected these flavors and passed down their culinary wisdom.';
+  };
+
+  const getTraditionalSeason = (ingredients, recipe) => {
+    // Use embedded cultural context if available
+    if (recipe?.culturalContext?.season) {
+      return recipe.culturalContext.season;
+    }
+    
+    if (ingredients.some(i => i.toLowerCase().includes('biryani') || i.toLowerCase().includes('curry'))) {
+      return 'Traditionally enjoyed during cooler months, monsoon season, and festive periods like Diwali, Eid, and wedding celebrations';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('salad') || i.toLowerCase().includes('quinoa'))) {
+      return 'Perfect for summer when fresh vegetables are abundant, though enjoyed year-round as a healthy meal';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('pizza'))) {
+      return 'Enjoyed year-round, but traditionally best in summer when tomatoes and basil are at peak freshness';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('teriyaki'))) {
+      return 'Popular year-round, but especially during summer grilling season and outdoor gatherings';
+    }
+    return 'Enjoyed throughout the year, with ingredients adapted to seasonal availability and local harvests';
+  };
+
+  const getTraditionalServing = (ingredients, recipe) => {
+    // Use embedded cultural context if available
+    if (recipe?.culturalContext?.serving) {
+      return recipe.culturalContext.serving;
+    }
+    
+    if (ingredients.some(i => i.toLowerCase().includes('rice') || i.toLowerCase().includes('biryani'))) {
+      return 'Traditionally served on banana leaves or large brass platters (thali), shared family-style with various accompaniments like raita, pickles, and papadums. Everyone gathers around to eat together.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('pizza'))) {
+      return 'In Italy, traditionally eaten with fork and knife, never cut into slices. Served immediately from the wood-fired oven while the cheese is still bubbling. Each person gets their own individual pizza.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('tofu') || i.toLowerCase().includes('teriyaki'))) {
+      return 'Traditionally served family-style with steamed rice and 2-3 other dishes. Everyone shares from the center using chopsticks, emphasizing community and togetherness.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('quinoa') || i.toLowerCase().includes('salad'))) {
+      return 'Served at room temperature or chilled, often as a complete meal or sophisticated side dish at gatherings and celebrations';
+    }
+    return 'Best enjoyed fresh and warm, shared with family and friends as part of a complete meal, following traditional hospitality customs';
+  };
+
+  const getCulturalTips = (ingredients, recipe) => {
+    // Use embedded cultural context if available
+    if (recipe?.culturalContext?.tips) {
+      return recipe.culturalContext.tips;
+    }
+    
+    if (ingredients.some(i => i.toLowerCase().includes('paneer') || i.toLowerCase().includes('biryani'))) {
+      return 'Master the "dum" cooking method - slow cooking in a sealed pot. Soak saffron in warm milk for at least 30 minutes. Never stir during cooking. Traditional cooks layer carefully and cook by sound and aroma.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('chickpeas'))) {
+      return 'Soak chickpeas overnight and cook them slowly for best texture. Add a tea bag while boiling for deeper color - an old Punjabi trick. The key is building layers of flavor with proper tempering (tadka).';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('tofu'))) {
+      return 'Press tofu for 30 minutes to remove moisture for maximum crispiness. Heat the wok until smoking before adding ingredients - this creates "wok hei" (breath of the wok), essential for authentic flavor.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('pizza'))) {
+      return 'Use San Marzano tomatoes and buffalo mozzarella for authenticity. Stretch dough by hand, never roll, to maintain air bubbles. Wood-fired ovens reach 900°F - home ovens should be as hot as possible.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('rice'))) {
+      return 'Traditional cooks test rice doneness by pressing a grain between fingers. Soaking rice for 30 minutes before cooking is an ancient practice. Each grain should be separate, not mushy.';
+    }
+    if (ingredients.some(i => i.toLowerCase().includes('quinoa'))) {
+      return 'Always rinse quinoa to remove the bitter saponin coating. Toast quinoa in a dry pan for 2-3 minutes before cooking for nuttier flavor. Ancient Andean cooks would ceremonially offer the first handful to Pachamama (Mother Earth).';
+    }
+    return 'Traditional techniques often involve patience and attention to detail. Take time to build flavors layer by layer, respecting the wisdom of generations of cooks who perfected these methods.';
+  };
+
+  // Hugging Face Analysis (Backup - Multiple Reliable Models) - AI Generated Cultural Info
   const performHuggingFaceAnalysis = async (recipe, ingredients, apiKey) => {
     const reliableModels = [
       'google/flan-t5-base',           // Google's T5 - very reliable
@@ -460,6 +637,17 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
       try {
         console.log(`🔄 Trying ${model.split('/')[1]}...`);
         
+        // Enhanced prompt for cultural information
+        const culturalPrompt = `Recipe: ${recipe.name}. Ingredients: ${ingredients.slice(0, 5).join(', ')}. 
+        
+        Provide analysis including:
+        - Preparation time (minutes)
+        - Calories per serving  
+        - Country/region of origin
+        - Brief history and cultural significance
+        - Traditional serving method
+        - Authentic cooking tips`;
+        
         const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
           method: 'POST',
           headers: {
@@ -467,10 +655,10 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            inputs: `Recipe: ${recipe.name}. Ingredients: ${ingredients.slice(0, 5).join(', ')}. Estimate: prep time (minutes), calories, protein, carbs, fat.`,
+            inputs: culturalPrompt,
             parameters: {
-              max_new_tokens: 100,
-              temperature: 0.7,
+              max_new_tokens: 200, // More tokens for cultural info
+              temperature: 0.3,    // Lower temperature for factual info
               do_sample: true
             },
             options: {
@@ -483,7 +671,7 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
           const result = await response.json();
           console.log(`✅ ${model.split('/')[1]} responded:`, result);
           
-          // Parse HF response and enhance smart estimates
+          // Parse HF response and extract cultural information
           const enhancedResults = enhanceWithHFResponse(recipe, ingredients, result);
           return { success: true, data: enhancedResults };
         } else {
@@ -499,10 +687,10 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
     return { success: false };
   };
 
-  // Enhance estimates with HF response
+  // Enhance estimates with HF response - Extract Cultural Info from AI
   const enhanceWithHFResponse = (recipe, ingredients, hfResult) => {
     try {
-      // Use AI response to enhance our smart estimates
+      // Use AI response to get cultural information
       let aiText = '';
       if (Array.isArray(hfResult) && hfResult[0]) {
         aiText = hfResult[0].generated_text || hfResult[0].summary_text || '';
@@ -510,16 +698,19 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
         aiText = hfResult.generated_text;
       }
 
+      console.log('🤖 Processing HF cultural response:', aiText);
+
       // Extract any numbers from AI response to enhance estimates
       const numbers = aiText.match(/\d+/g) || [];
       
       const baseResults = {
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
-        alternateIngredients: generateAlternatives(ingredients.slice(0, 3))
+        alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
+        culturalInfo: extractCulturalInfoFromAI(aiText, recipe.name)
       };
 
-      // AI-enhance the estimates
+      // AI-enhance the nutritional estimates
       if (numbers.length > 0) {
         const validTimes = numbers.filter(n => parseInt(n) >= 15 && parseInt(n) <= 120);
         if (validTimes.length > 0) {
@@ -541,8 +732,102 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
       return {
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
-        alternateIngredients: generateAlternatives(ingredients.slice(0, 3))
+        alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
+        culturalInfo: null // No cultural info if AI processing fails
       };
+    }
+  };
+
+  // Extract Cultural Information from AI Text Response
+  const extractCulturalInfoFromAI = (aiText, recipeName) => {
+    if (!aiText || aiText.length < 50) return null;
+
+    try {
+      const text = aiText.toLowerCase();
+      
+      // Try to extract cultural information from AI response
+      let origin = 'Origin not determined by AI';
+      let history = 'Historical information not available';
+      let significance = 'Cultural significance not available';
+      let season = 'Seasonal information not available';
+      let serving = 'Traditional serving information not available';
+      let tips = 'Cultural cooking tips not available';
+
+      // Extract origin information
+      const originKeywords = ['origin', 'from', 'originated', 'country', 'region', 'culture'];
+      const countryNames = ['india', 'china', 'italy', 'japan', 'greece', 'mexico', 'france', 'thailand', 'peru', 'mediterranean'];
+      
+      for (const country of countryNames) {
+        if (text.includes(country)) {
+          origin = `${country.charAt(0).toUpperCase() + country.slice(1)} (identified by AI)`;
+          break;
+        }
+      }
+
+      // Extract historical information
+      if (text.includes('history') || text.includes('ancient') || text.includes('traditional') || text.includes('century')) {
+        const sentences = aiText.split(/[.!?]+/);
+        const historySentence = sentences.find(s => 
+          s.toLowerCase().includes('history') || 
+          s.toLowerCase().includes('ancient') || 
+          s.toLowerCase().includes('traditional') ||
+          s.toLowerCase().includes('century')
+        );
+        if (historySentence) {
+          history = historySentence.trim() + ' (AI generated)';
+        }
+      }
+
+      // Extract cultural significance
+      if (text.includes('cultural') || text.includes('tradition') || text.includes('celebration') || text.includes('festival')) {
+        const sentences = aiText.split(/[.!?]+/);
+        const culturalSentence = sentences.find(s => 
+          s.toLowerCase().includes('cultural') || 
+          s.toLowerCase().includes('tradition') || 
+          s.toLowerCase().includes('celebration')
+        );
+        if (culturalSentence) {
+          significance = culturalSentence.trim() + ' (AI generated)';
+        }
+      }
+
+      // Extract serving information
+      if (text.includes('served') || text.includes('serving') || text.includes('eaten')) {
+        const sentences = aiText.split(/[.!?]+/);
+        const servingSentence = sentences.find(s => 
+          s.toLowerCase().includes('served') || 
+          s.toLowerCase().includes('serving') || 
+          s.toLowerCase().includes('eaten')
+        );
+        if (servingSentence) {
+          serving = servingSentence.trim() + ' (AI generated)';
+        }
+      }
+
+      // Extract cooking tips
+      if (text.includes('tip') || text.includes('cook') || text.includes('prepare') || text.includes('technique')) {
+        const sentences = aiText.split(/[.!?]+/);
+        const tipSentence = sentences.find(s => 
+          s.toLowerCase().includes('tip') || 
+          s.toLowerCase().includes('cook') || 
+          s.toLowerCase().includes('technique')
+        );
+        if (tipSentence) {
+          tips = tipSentence.trim() + ' (AI generated)';
+        }
+      }
+
+      return {
+        origin,
+        history,
+        significance,
+        season,
+        serving,
+        tips
+      };
+    } catch (error) {
+      console.error('Error extracting cultural info from AI:', error);
+      return null;
     }
   };
 
@@ -893,6 +1178,77 @@ ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]`;
                     ))}
                   </div>
                 </div>
+
+                {/* Cultural & Historical Information - Only show if AI provided data */}
+                {aiRecommendations.culturalInfo && (
+                  <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg md:col-span-2">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <BookOpen className="h-5 w-5 text-purple-600" />
+                      <h3 className="text-xl font-semibold">Cultural Heritage & History</h3>
+                      <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">🤖 AI Generated</span>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {/* Origin & History */}
+                      <div className="space-y-4">
+                        <div className="bg-purple-50 rounded-lg p-4">
+                          <h4 className="font-semibold text-purple-800 mb-2 flex items-center">
+                            🌍 Origin
+                          </h4>
+                          <p className="text-purple-700 text-sm">{aiRecommendations.culturalInfo.origin}</p>
+                        </div>
+                        
+                        <div className="bg-blue-50 rounded-lg p-4">
+                          <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
+                            📜 History
+                          </h4>
+                          <p className="text-blue-700 text-sm">{aiRecommendations.culturalInfo.history}</p>
+                        </div>
+                        
+                        <div className="bg-amber-50 rounded-lg p-4">
+                          <h4 className="font-semibold text-amber-800 mb-2 flex items-center">
+                            🎭 Cultural Significance
+                          </h4>
+                          <p className="text-amber-700 text-sm">{aiRecommendations.culturalInfo.significance}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Traditional Context */}
+                      <div className="space-y-4">
+                        <div className="bg-green-50 rounded-lg p-4">
+                          <h4 className="font-semibold text-green-800 mb-2 flex items-center">
+                            🌸 Traditional Season
+                          </h4>
+                          <p className="text-green-700 text-sm">{aiRecommendations.culturalInfo.season}</p>
+                        </div>
+                        
+                        <div className="bg-rose-50 rounded-lg p-4">
+                          <h4 className="font-semibold text-rose-800 mb-2 flex items-center">
+                            🍽️ Traditional Serving
+                          </h4>
+                          <p className="text-rose-700 text-sm">{aiRecommendations.culturalInfo.serving}</p>
+                        </div>
+                        
+                        <div className="bg-indigo-50 rounded-lg p-4">
+                          <h4 className="font-semibold text-indigo-800 mb-2 flex items-center">
+                            💡 Cultural Cooking Tips
+                          </h4>
+                          <p className="text-indigo-700 text-sm">{aiRecommendations.culturalInfo.tips}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Message when no cultural info available */}
+                {!aiRecommendations.culturalInfo && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 md:col-span-2">
+                    <div className="flex items-center justify-center space-x-2 text-gray-600">
+                      <BookOpen className="h-5 w-5" />
+                      <p>🤖 Cultural information will be provided by AI when API keys are configured</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Article Link */}
                 <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg md:col-span-2">
