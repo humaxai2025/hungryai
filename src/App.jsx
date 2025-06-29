@@ -830,6 +830,7 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
       return null;
     }
   };
+  // (This misplaced code block is removed to fix the syntax error)
 
   // CSP-compliant URL creation helper
   const createSearchUrl = (searchTerm) => {
@@ -1101,20 +1102,66 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
                 </div>
               )}
               
-              <div className="flex flex-wrap gap-2 mb-6">
-                {parseIngredients(selectedRecipe.ingredients).slice(0, 8).map((ingredient, index) => (
-                  <span
-                    key={index}
-                    className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm"
-                  >
-                    {ingredient}
-                  </span>
-                ))}
-                {parseIngredients(selectedRecipe.ingredients).length > 8 && (
-                  <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
-                    +{parseIngredients(selectedRecipe.ingredients).length - 8} more...
-                  </span>
-                )}
+              {/* Complete Ingredients List */}
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                  <Utensils className="h-5 w-5 text-indigo-600 mr-2" />
+                  Ingredients ({parseIngredients(selectedRecipe.ingredients).length} items)
+                </h3>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="grid md:grid-cols-2 gap-2">
+                    {parseIngredients(selectedRecipe.ingredients).map((ingredient, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start space-x-2 py-2 border-b border-gray-200 last:border-b-0"
+                      >
+                        <span className="text-indigo-600 font-semibold text-sm min-w-[24px]">
+                          {index + 1}.
+                        </span>
+                        <span className="text-gray-700 text-sm flex-1">
+                          {ingredient}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Recipe Steps */}
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                  <Clock className="h-5 w-5 text-green-600 mr-2" />
+                  Instructions
+                </h3>
+                <div className="bg-green-50 rounded-xl p-4">
+                  <div className="space-y-3">
+                    {(() => {
+                      try {
+                        // Safe parsing of steps
+                        const stepsStr = selectedRecipe.steps.replace(/^\[|\]$/g, '');
+                        const steps = stepsStr.split('\', \'').map(step => 
+                          step.replace(/^\'|\'$/g, '').replace(/^\"|\"$/g, '')
+                        );
+                        return steps.map((step, index) => (
+                          <div key={index} className="flex items-start space-x-3">
+                            <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold min-w-[24px]">
+                              {index + 1}
+                            </span>
+                            <p className="text-gray-700 text-sm flex-1 leading-relaxed">
+                              {step}
+                            </p>
+                          </div>
+                        ));
+                      } catch (error) {
+                        return (
+                          <p className="text-gray-600 text-sm">
+                            Cooking instructions available - see recipe source for detailed steps.
+                          </p>
+                        );
+                      }
+                    })()}
+                  </div>
+                </div>
               </div>
             </div>
 
