@@ -3,7 +3,31 @@ import { Search, Clock, Apple, Utensils, Youtube, BookOpen, Sparkles, ChefHat } 
 
 
   // Load recipes from JSON file
-  useEffect(() => {
+ 
+  // Parse ingredients string to array
+  
+
+const App = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [aiRecommendations, setAiRecommendations] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  const parseIngredients = (ingredientsStr) => {
+    try {
+      // Remove quotes and brackets, then split by comma
+      return ingredientsStr
+        .replace(/^\['?|'?\]$/g, '')
+        .split("', '")
+        .map(ingredient => ingredient.replace(/^'|'$/g, ''));
+    } catch {
+      return [];
+    }
+  };
+
+   useEffect(() => {
     const loadRecipes = async () => {
       try {
         setRecipesLoading(true);
@@ -25,26 +49,6 @@ import { Search, Clock, Apple, Utensils, Youtube, BookOpen, Sparkles, ChefHat } 
     loadRecipes();
   }, []);
 
-  // Parse ingredients string to array
-  const parseIngredients = (ingredientsStr) => {
-    try {
-      // Remove quotes and brackets, then split by comma
-      return ingredientsStr
-        .replace(/^\['?|'?\]$/g, '')
-        .split("', '")
-        .map(ingredient => ingredient.replace(/^'|'$/g, ''));
-    } catch {
-      return [];
-    }
-  };
-
-const App = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [selectedRecipe, setSelectedRecipe] = useState(null);
-  const [aiRecommendations, setAiRecommendations] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [showResults, setShowResults] = useState(false);
 
   // Search functionality
   const handleSearch = (query) => {
