@@ -768,7 +768,7 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
     return { success: false };
   };
 
-  // Enhance estimates with HF response - Extract Cultural Info from AI
+  // Enhanced cooking instructions parsing - NO FALLBACK TO ORIGINAL STEPS
   const enhanceWithHFResponse = (recipe, ingredients, hfResult) => {
     try {
       // Use AI response to get cultural information and cooking instructions
@@ -805,7 +805,7 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
-        aiInstructions: aiInstructions, // Include AI instructions from HF
+        aiInstructions: aiInstructions, // Include AI instructions from HF - NO FALLBACK
         culturalInfo: extractCulturalInfoFromAI(aiText, recipe.name)
       };
 
@@ -832,8 +832,8 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
         prepTime: estimatePrepTime(ingredients.length),
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
-        aiInstructions: null, // No AI instructions if processing fails
-        culturalInfo: null // No cultural info if AI processing fails
+        aiInstructions: null, // NO STATIC FALLBACK EVER
+        culturalInfo: null
       };
     }
   };
@@ -991,12 +991,14 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
   };
 
   const resetToHome = () => {
+    console.log('🔍 DEBUG - Resetting to home');
     setSelectedRecipe(null);
     setAiRecommendations(null);
     setSearchQuery('');
     setSearchResults([]);
     setShowResults(false);
     setApiKeyError(false);
+    setLoading(false); // Make sure loading is also reset
   };
 
   return (
