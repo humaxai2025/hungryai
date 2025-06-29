@@ -992,6 +992,7 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
           </div>
         ) : !selectedRecipe ? (
           <>
+          <div class="center-container">
             {/* Hero Section */}
             <div className="text-center mb-12">
               <h1 className="text-6xl font-bold text-gray-800 mb-4">
@@ -1016,6 +1017,8 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
                     className="w-full pl-12 pr-4 py-4 text-lg border-2 border-transparent rounded-full shadow-lg focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
                   />
                 </div>
+          </div>
+
                 
                 {/* Search Results Dropdown */}
                 {showResults && searchResults.length > 0 && (
