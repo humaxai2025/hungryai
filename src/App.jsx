@@ -228,7 +228,6 @@ const App = () => {
       // Set recommendations
       setAiRecommendations({
         ...aiResults,
-        articleUrl: createSearchUrl(recipe.name + ' recipe cooking instructions'),
         aiGenerated: aiGenerated,
         message: aiGenerated ? 
           "🤖 REAL AI Analysis - Powered by Google Gemini/Hugging Face" : 
@@ -248,7 +247,6 @@ const App = () => {
         nutrition: estimateNutrition(recipe.name, ingredients),
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
         culturalInfo: null, // No cultural info if AI completely fails
-        articleUrl: createSearchUrl(recipe.name + ' recipe'),
         aiGenerated: false,
         message: "❌ AI analysis failed - check API keys"
       });
@@ -366,7 +364,12 @@ HISTORY: [detailed 2-3 sentence history of this dish including dates and cultura
 CULTURAL: [cultural significance, traditions, and symbolism in the origin culture]
 SEASON: [traditional season, festivals, or occasions when this dish is eaten]
 SERVING: [authentic traditional way this dish is served in its culture of origin]
-TIPS: [authentic cultural cooking tips and traditional techniques from the culture]`;
+TIPS: [authentic cultural cooking tips and traditional techniques from the culture]
+INSTRUCTIONS: [step-by-step cooking instructions, each step on a new line starting with "STEP:"]
+STEP: [First cooking step with specific techniques and timing]
+STEP: [Second cooking step with specific techniques and timing]
+STEP: [Continue with all necessary cooking steps]
+STEP: [Final step with serving suggestions]`;
 
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
         method: 'POST',
@@ -427,6 +430,12 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
       const seasonMatch = aiText.match(/SEASON:\s*([^\n\r]+)/i);
       const servingMatch = aiText.match(/SERVING:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
       const tipsMatch = aiText.match(/TIPS:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
+      
+      // Extract cooking instructions
+      const instructionMatches = aiText.match(/STEP:\s*([^\n\r]+(?:\n(?!STEP:)[^\n\r]+)*)/gi);
+      const aiInstructions = instructionMatches ? 
+        instructionMatches.map(match => match.replace(/^STEP:\s*/i, '').trim()) : 
+        [];
 
       const results = {
         prepTime: prepMatch ? Math.max(15, Math.min(120, parseInt(prepMatch[1]))) : estimatePrepTime(ingredients.length),
@@ -453,6 +462,8 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
             ratio: '1:1'
           }
         ],
+        // AI-Generated Instructions
+        aiInstructions: aiInstructions.length > 0 ? aiInstructions : null,
         // 100% AI-Generated Cultural Information
         culturalInfo: originMatch || historyMatch || culturalMatch || seasonMatch || servingMatch || tipsMatch ? {
           origin: originMatch ? originMatch[1].trim() : 'Origin information not available',
@@ -831,17 +842,6 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
     }
   };
 
-  // CSP-compliant URL creation helper
-  const createSearchUrl = (searchTerm) => {
-    const baseUrl = 'https://www.google.com/search?q=';
-    return baseUrl + encodeURIComponent(searchTerm);
-  };
-
-  const createYouTubeUrl = (searchTerm) => {
-    const baseUrl = 'https://www.youtube.com/results?search_query=';
-    return baseUrl + encodeURIComponent(searchTerm);
-  };
-
   // Helper function to estimate prep time
   const estimatePrepTime = (ingredientCount) => {
     if (ingredientCount <= 5) return 25;
@@ -1128,11 +1128,36 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
                   <Clock className="h-5 w-5 text-green-600 mr-2" />
                   Instructions
                 </h3>
+                
+                {/* AI Status Message Above Instructions */}
+                {aiRecommendations?.message && (
+                  <div className={`mb-4 ${aiRecommendations.aiGenerated ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'} border rounded-xl p-4`}>
+                    <div className="flex items-center space-x-2">
+                      <Sparkles className={`h-5 w-5 ${aiRecommendations.aiGenerated ? 'text-green-600' : 'text-blue-600'}`} />
+                      <span className={aiRecommendations.aiGenerated ? 'text-green-800' : 'text-blue-800'}>{aiRecommendations.message}</span>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="bg-green-50 rounded-xl p-4">
                   <div className="space-y-3">
                     {(() => {
+                      // Use AI-generated instructions if available, otherwise fall back to original
+                      if (aiRecommendations?.aiInstructions && aiRecommendations.aiInstructions.length > 0) {
+                        return aiRecommendations.aiInstructions.map((step, index) => (
+                          <div key={index} className="flex items-start space-x-3">
+                            <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold min-w-[24px]">
+                              {index + 1}
+                            </span>
+                            <p className="text-gray-700 text-sm flex-1 leading-relaxed">
+                              {step}
+                            </p>
+                          </div>
+                        ));
+                      }
+                      
                       try {
-                        // Safe parsing of steps
+                        // Safe parsing of original steps
                         const stepsStr = selectedRecipe.steps.replace(/^\[|\]$/g, '');
                         const steps = stepsStr.split('\', \'').map(step => 
                           step.replace(/^\'|\'$/g, '').replace(/^\"|\"$/g, '')
@@ -1150,7 +1175,7 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
                       } catch (error) {
                         return (
                           <p className="text-gray-600 text-sm">
-                            Cooking instructions available - see recipe source for detailed steps.
+                            Cooking instructions available - AI will enhance these when configured.
                           </p>
                         );
                       }
@@ -1170,16 +1195,6 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
               </div>
             ) : aiRecommendations ? (
               <div className="grid md:grid-cols-2 gap-6">
-                {/* Status indicator */}
-                {aiRecommendations.message && (
-                  <div className={`md:col-span-2 ${aiRecommendations.aiGenerated ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'} border rounded-xl p-4`}>
-                    <div className="flex items-center space-x-2">
-                      <Sparkles className={`h-5 w-5 ${aiRecommendations.aiGenerated ? 'text-green-600' : 'text-blue-600'}`} />
-                      <span className={aiRecommendations.aiGenerated ? 'text-green-800' : 'text-blue-800'}>{aiRecommendations.message}</span>
-                    </div>
-                  </div>
-                )}
-
                 {/* Preparation Time & Nutrition */}
                 <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg">
                   <div className="flex items-center space-x-2 mb-4">
@@ -1292,28 +1307,6 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
                   </div>
                 ) : null}
 
-                {/* Article Link */}
-                {/* You can add an article or video link here if desired */}
-                <div className="md:col-span-2 flex flex-col md:flex-row gap-4">
-                  <a
-                    href={aiRecommendations.articleUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors w-full md:w-auto"
-                  >
-                    <BookOpen className="h-5 w-5 mr-2" />
-                    Learn More (Google)
-                  </a>
-                  <a
-                    href={createYouTubeUrl(selectedRecipe.name + ' recipe')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors w-full md:w-auto"
-                  >
-                    <span className="mr-2">▶️</span>
-                    Watch on YouTube
-                  </a>
-                </div>
               </div>
             ) : null}
           </div>
@@ -1324,8 +1317,8 @@ TIPS: [authentic cultural cooking tips and traditional techniques from the cultu
       <footer className="bg-white/60 backdrop-blur-md border-t border-white/20 mt-16">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center text-gray-600">
-            <p>🔒 Privacy-first design - No data is stored or tracked</p>
-            <p className="mt-2">Built with React, powered by AI</p>
+            <p>Built with ❤️ by HumanXAI for foodies</p>
+            <p className="mt-2">🔒 Privacy-first design - No data is stored or tracked</p>
           </div>
         </div>
       </footer>
