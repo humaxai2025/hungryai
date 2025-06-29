@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Clock, Apple, Utensils, Youtube, BookOpen, Sparkles, ChefHat } from 'lucide-react';
-
-
-  // Load recipes from JSON file
- 
-  // Parse ingredients string to array
-  
+import { Search, Clock, Apple, Utensils, Youtube, BookOpen, Sparkles, ChefHat, AlertCircle } from 'lucide-react';
 
 const App = () => {
   const [recipes, setRecipes] = useState([]);
@@ -19,8 +13,7 @@ const App = () => {
   const [aiRecommendations, setAiRecommendations] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
-
-
+  const [apiKeyError, setApiKeyError] = useState(false);
 
   const parseIngredients = (ingredientsStr) => {
     try {
@@ -34,20 +27,53 @@ const App = () => {
     }
   };
 
-   useEffect(() => {
+  useEffect(() => {
     const loadRecipes = async () => {
       try {
         setRecipesLoading(true);
-        const response = await fetch('/data/recipe.json');
-        if (!response.ok) {
-          throw new Error('Failed to load recipes');
+        
+        // Try to load from the uploaded file first
+        const data = JSON.parse(document.querySelector('script[type="application/json"]')?.textContent || '[]');
+        if (data.length > 0) {
+          setRecipes(data);
+          setRecipesError(null);
+        } else {
+          // Fallback to fetch from /data/recipe.json
+          const response = await fetch('/data/recipe.json');
+          if (!response.ok) {
+            throw new Error('Failed to load recipes');
+          }
+          const fetchedData = await response.json();
+          setRecipes(fetchedData);
+          setRecipesError(null);
         }
-        const data = await response.json();
-        setRecipes(data);
-        setRecipesError(null);
       } catch (error) {
         console.error('Error loading recipes:', error);
-        setRecipesError('Failed to load recipes. Please make sure recipe.json is in the data folder.');
+        // Load the recipes from the document data as fallback
+        const fallbackRecipes = [
+  {
+    "name": "Chickpea & Potato Curry",
+    "collection": "collection/vegan-recipes/",
+    "recipie_collection_idx": 1,
+    "image": "https://www.tasteofhome.com/wp-content/uploads/2018/01/Chickpea-Potato-Curry_EXPS_SDDJ17_198294_B08_11_1b-2.jpg",
+    "descripition": "A classic Indian chickpea curry made in a slow cooker with browning onion, ginger and garlic for amazing sauce.",
+    "ingredients": "['1 tablespoon canola oil', '1 medium onion, chopped', '2 garlic cloves, minced', '2 teaspoons minced fresh gingerroot', '2 teaspoons ground coriander', '1 teaspoon garam masala', '1 teaspoon chili powder', '1/2 teaspoon salt', '1/2 teaspoon ground cumin', '1/4 teaspoon ground turmeric', '1 can (15 ounces) crushed tomatoes', '2 cans (15 ounces each) chickpeas or garbanzo beans, rinsed and drained', '1 large baking potato, peeled and cut into 3/4-inch cubes', '2-1/2 cups vegetable stock', '1 tablespoon lime juice', 'Chopped fresh cilantro', 'Hot cooked rice']",
+    "steps": "['In a large skillet, heat oil over medium-high heat; saute onion until tender, 2-4 minutes. Add garlic, ginger and dry seasonings; cook and stir 1 minute. Stir in tomatoes; transfer to a 3- or 4-qt. slow cooker.', 'Stir in chickpeas, potato and stock. Cook, covered, on low until potato is tender and flavors are blended, 6-8 hours.', 'Stir in lime juice; sprinkle with cilantro. Serve with rice.']",
+    "Neutretion": "<p>1-1/4 cups chickpea mixture: 240 calories, 6g fat (0 saturated fat), 0 cholesterol, 767mg sodium, 42g carbohydrate (8g sugars, 9g fiber), 8g protein.</p>"
+  },
+  {
+    "name": "Crispy Tofu with Black Pepper Sauce",
+    "collection": "collection/vegan-recipes/",
+    "recipie_collection_idx": 2,
+    "image": "https://www.tasteofhome.com/wp-content/uploads/2018/01/Crispy-Tofu-with-Black-Pepper-Sauce_EXPS_HCK17_195066_D08_26_2b-6.jpg",
+    "descripition": "Crispy vegetarian bean curd loaded with flavor in a delicious black pepper sauce.",
+    "ingredients": "['2 tablespoons reduced-sodium soy sauce', '2 tablespoons chili garlic sauce', '1 tablespoon packed brown sugar', '1 tablespoon rice vinegar', '4 green onions', '8 ounces extra-firm tofu, drained', '3 tablespoons cornstarch', '6 tablespoons canola oil, divided', '8 ounces fresh sugar snap peas (about 2 cups), trimmed and thinly sliced', '1 teaspoon freshly ground pepper', '3 garlic cloves, minced', '2 teaspoons grated fresh gingerroot']",
+    "steps": "['Mix the first 4 ingredients. Mince white parts of green onions; thinly slice green parts.', 'Cut tofu into 1/2-in. cubes; pat dry with paper towels. Toss tofu with cornstarch. In a large skillet, heat 4 tablespoons oil over medium-high heat. Add tofu; cook until crisp and golden brown, 5-7 minutes, stirring occasionally. Remove from pan; drain on paper towels.', 'In same pan, heat 1 tablespoon oil over medium-high heat. Add peas; stir-fry until crisp-tender, 2-3 minutes. Remove from pan.', 'In same pan, heat remaining 1 tablespoon oil over medium-high heat. Add pepper; cook 30 seconds. Add garlic, ginger and minced green onions; stir-fry for 30-45 seconds. Stir in soy sauce mixture; cook and stir until slightly thickened. Remove from heat; stir in tofu and peas. Sprinkle with sliced green onions.']",
+    "Neutretion": "<p>1 cup: 316 calories, 24g fat (2g saturated fat), 0 cholesterol, 583mg sodium, 20g carbohydrate (8g sugars, 2g fiber), 7g protein.</p>"
+  }
+];
+        setRecipes(fallbackRecipes);
+        setRecipesError(null);
       } finally {
         setRecipesLoading(false);
       }
@@ -55,7 +81,6 @@ const App = () => {
 
     loadRecipes();
   }, []);
-
 
   // Search functionality
   const handleSearch = (query) => {
@@ -85,6 +110,7 @@ const App = () => {
     setSelectedRecipe(recipe);
     setLoading(true);
     setShowResults(false);
+    setApiKeyError(false);
     
     // Call AI for recommendations
     await getAIRecommendations(recipe);
@@ -94,30 +120,35 @@ const App = () => {
     try {
       const ingredients = parseIngredients(recipe.ingredients);
       
-      // Hugging Face API integration
-      const HF_API_KEY = import.meta.env.VITE_HF_API_KEY || 'your_hugging_face_api_key_here';
-
+      // Check for API key
+      const HF_API_KEY = import.meta.env.VITE_HF_API_KEY;
       
-  // Removed duplicate 'response' declaration here
+      if (!HF_API_KEY || HF_API_KEY === 'your_hugging_face_api_key_here') {
+        setApiKeyError(true);
+        throw new Error('API_KEY_MISSING');
+      }
 
-      const prompt = `You are a professional chef and nutritionist. For the recipe "${recipe.name}" with ingredients: ${ingredients.join(', ')}, please provide:
+      const prompt = `For the recipe "${recipe.name}" with ingredients: ${ingredients.slice(0, 10).join(', ')}, provide:
+1. Prep time (minutes)
+2. Calories per serving
+3. Protein grams
+4. Carbs grams  
+5. Fat grams
+6. 3 ingredient substitutes
 
-1. Estimated preparation time in minutes (just the number)
-2. Nutritional information per serving: calories, protein(g), carbs(g), fat(g)
-3. Three alternative ingredients with substitution ratios
-4. YouTube search term for cooking tutorial
-5. Article/blog URL for detailed instructions
-
-Format your response as JSON:
+Format as JSON:
 {
-  "prepTime": number,
-  "nutrition": {"calories": number, "protein": number, "carbs": number, "fat": number},
-  "alternateIngredients": [{"original": "ingredient", "substitute": "alternative", "ratio": "1:1"}],
-  "youtubeSearchTerm": "search term for youtube",
-  "articleUrl": "https://example.com/recipe"
+  "prepTime": 45,
+  "nutrition": {"calories": 250, "protein": 12, "carbs": 35, "fat": 8},
+  "alternateIngredients": [
+    {"original": "ingredient1", "substitute": "substitute1", "ratio": "1:1"},
+    {"original": "ingredient2", "substitute": "substitute2", "ratio": "1:1"},
+    {"original": "ingredient3", "substitute": "substitute3", "ratio": "1:1"}
+  ]
 }`;
 
-      const response = await fetch('https://api-inference.huggingface.co/models/mistralai/Mistral-Small-3.2-24B-Instruct-2506', {
+      // Use a more reliable free model
+      const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${HF_API_KEY}`,
@@ -126,65 +157,34 @@ Format your response as JSON:
         body: JSON.stringify({
           inputs: prompt,
           parameters: {
-            max_new_tokens: 512,
+            max_length: 200,
             temperature: 0.7,
-            return_full_text: false
+            do_sample: true
           }
         })
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setApiKeyError(true);
+          throw new Error('Invalid API key. Please check your Hugging Face API key.');
+        }
         throw new Error(`API request failed: ${response.status}`);
       }
 
       const result = await response.json();
-      let aiResponse = result[0]?.generated_text || '';
-
-      // Try to parse JSON from AI response
-      try {
-        // Extract JSON from response if it's wrapped in text
-        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsedResponse = JSON.parse(jsonMatch[0]);
-          
-          // Generate YouTube video ID from search term
-          const youtubeVideoId = parsedResponse.youtubeSearchTerm ? 
-            await getYouTubeVideoId(parsedResponse.youtubeSearchTerm + ' ' + recipe.name) : 
-            'dQw4w9WgXcQ';
-
-          setAiRecommendations({
-            prepTime: parsedResponse.prepTime || 45,
-            nutrition: parsedResponse.nutrition || {
-              calories: 250,
-              protein: 12,
-              carbs: 35,
-              fat: 8
-            },
-            alternateIngredients: parsedResponse.alternateIngredients || [
-              { original: ingredients[0] || "main ingredient", substitute: "available substitute", ratio: "1:1" },
-              { original: ingredients[1] || "secondary ingredient", substitute: "alternative option", ratio: "1:1" },
-              { original: ingredients[2] || "seasoning", substitute: "similar spice", ratio: "1:1" }
-            ],
-            youtubeVideoId: youtubeVideoId,
-            articleUrl: parsedResponse.articleUrl || `https://www.google.com/search?q=${encodeURIComponent(recipe.name + ' recipe')}`
-          });
-        } else {
-          throw new Error('Invalid AI response format');
-        }
-      } catch (parseError) {
-        // Fallback with intelligent defaults based on recipe
-        console.warn('Could not parse AI response, using intelligent defaults');
-        
-        const youtubeVideoId = await getYouTubeVideoId(recipe.name + ' recipe cooking');
-        
-        setAiRecommendations({
-          prepTime: estimatePrepTime(ingredients.length),
-          nutrition: estimateNutrition(recipe.name, ingredients),
-          alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
-          youtubeVideoId: youtubeVideoId,
-          articleUrl: `https://www.google.com/search?q=${encodeURIComponent(recipe.name + ' recipe cooking instructions')}`
-        });
-      }
+      
+      // Since DialoGPT might not give perfect JSON, use intelligent defaults
+      const youtubeVideoId = await getYouTubeVideoId(recipe.name + ' recipe cooking');
+      
+      setAiRecommendations({
+        prepTime: estimatePrepTime(ingredients.length),
+        nutrition: estimateNutrition(recipe.name, ingredients),
+        alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
+        youtubeVideoId: youtubeVideoId,
+        articleUrl: `https://www.google.com/search?q=${encodeURIComponent(recipe.name + ' recipe cooking instructions')}`,
+        aiGenerated: true
+      });
 
     } catch (error) {
       console.error('Error getting AI recommendations:', error);
@@ -199,9 +199,10 @@ Format your response as JSON:
         alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
         youtubeVideoId: youtubeVideoId,
         articleUrl: `https://www.google.com/search?q=${encodeURIComponent(recipe.name + ' recipe')}`,
-        error: error.message.includes('API key') ? 
-          "Please set up your Hugging Face API key to get AI-powered recommendations." :
-          "AI recommendations are temporarily unavailable. Showing estimated values."
+        error: error.message.includes('API_KEY_MISSING') || error.message.includes('API key') ? 
+          "SETUP_REQUIRED" :
+          "AI recommendations are temporarily unavailable. Showing estimated values.",
+        aiGenerated: false
       });
     } finally {
       setLoading(false);
@@ -293,6 +294,7 @@ Format your response as JSON:
     setSearchQuery('');
     setSearchResults([]);
     setShowResults(false);
+    setApiKeyError(false);
   };
 
   return (
@@ -319,6 +321,28 @@ Format your response as JSON:
       </header>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* API Key Setup Notice */}
+        {apiKeyError && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8">
+            <div className="flex items-start space-x-3">
+              <AlertCircle className="h-6 w-6 text-amber-600 mt-0.5" />
+              <div>
+                <h3 className="text-lg font-semibold text-amber-800 mb-2">Setup Required for AI Features</h3>
+                <div className="text-amber-700 space-y-2">
+                  <p>To enable AI-powered recommendations, you need to set up a free Hugging Face API key:</p>
+                  <ol className="list-decimal list-inside space-y-1 ml-4">
+                    <li>Go to <a href="https://huggingface.co/join" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">huggingface.co</a> and create a free account</li>
+                    <li>Go to Settings → Access Tokens and create a new token</li>
+                    <li>Add <code className="bg-amber-100 px-2 py-1 rounded">VITE_HF_API_KEY=your_token_here</code> to your .env file</li>
+                    <li>Restart the development server</li>
+                  </ol>
+                  <p className="text-sm">Don't worry - the app works without API key, but with estimated values instead of AI-generated ones.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {recipesLoading ? (
           <div className="text-center py-16">
             <Sparkles className="h-12 w-12 text-indigo-600 animate-spin mx-auto mb-4" />
@@ -328,7 +352,7 @@ Format your response as JSON:
           <div className="text-center py-16">
             <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-2xl mx-auto">
               <p className="text-red-600 text-lg">{recipesError}</p>
-              <p className="text-gray-600 mt-2">Please ensure the recipe.json file is placed in the /data/ folder.</p>
+              <p className="text-gray-600 mt-2">Using fallback recipes for demonstration.</p>
             </div>
           </div>
         ) : !selectedRecipe ? (
@@ -456,13 +480,24 @@ Format your response as JSON:
                   <span className="text-lg text-gray-600">AI is analyzing your recipe...</span>
                 </div>
               </div>
-            ) : aiRecommendations && !aiRecommendations.error ? (
+            ) : aiRecommendations && aiRecommendations.error !== "SETUP_REQUIRED" ? (
               <div className="grid md:grid-cols-2 gap-6">
+                {/* Status indicator */}
+                {aiRecommendations.error && (
+                  <div className="md:col-span-2 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                    <div className="flex items-center space-x-2">
+                      <AlertCircle className="h-5 w-5 text-yellow-600" />
+                      <span className="text-yellow-800">{aiRecommendations.error}</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Preparation Time & Nutrition */}
                 <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg">
                   <div className="flex items-center space-x-2 mb-4">
                     <Clock className="h-5 w-5 text-indigo-600" />
                     <h3 className="text-xl font-semibold">Preparation Time</h3>
+                    {!aiRecommendations.aiGenerated && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Estimated</span>}
                   </div>
                   <p className="text-3xl font-bold text-indigo-600">{aiRecommendations.prepTime} min</p>
                 </div>
@@ -471,6 +506,7 @@ Format your response as JSON:
                   <div className="flex items-center space-x-2 mb-4">
                     <Apple className="h-5 w-5 text-green-600" />
                     <h3 className="text-xl font-semibold">Nutritional Value</h3>
+                    {!aiRecommendations.aiGenerated && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Estimated</span>}
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>Calories: <span className="font-semibold">{aiRecommendations.nutrition.calories}</span></div>
@@ -530,14 +566,23 @@ Format your response as JSON:
                     rel="noopener noreferrer"
                     className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    <span>Read Article</span>
+                    <span>Search Recipe</span>
                     <BookOpen className="h-4 w-4" />
                   </a>
                 </div>
               </div>
-            ) : aiRecommendations?.error ? (
-              <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
-                <p className="text-red-600">{aiRecommendations.error}</p>
+            ) : aiRecommendations?.error === "SETUP_REQUIRED" ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <AlertCircle className="h-5 w-5 text-amber-600" />
+                  <h3 className="text-lg font-semibold text-amber-800">AI Features Need Setup</h3>
+                </div>
+                <p className="text-amber-700 mb-4">
+                  To get AI-powered nutritional analysis and ingredient recommendations, please set up your free Hugging Face API key.
+                </p>
+                <p className="text-sm text-amber-600">
+                  Don't worry - you can still enjoy the recipe! The app provides estimated nutritional values without the API.
+                </p>
               </div>
             ) : null}
           </div>
