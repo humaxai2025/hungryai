@@ -19,11 +19,6 @@
       "dest": "/index.html"
     }
   ],
-  "functions": {
-    "app/api/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "env": {
     "REACT_APP_HF_API_KEY": "@react_app_hf_api_key"
   }
