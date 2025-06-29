@@ -1255,25 +1255,27 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Preparation Time & Nutrition */}
                 <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg">
-                  <div className="flex items-center space-x-2 mb-4">
+                  <div className="flex items-center justify-center space-x-2 mb-4">
                     <Clock className="h-5 w-5 text-indigo-600" />
                     <h3 className="text-xl font-semibold">Preparation Time</h3>
                     {!aiRecommendations.aiGenerated && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Smart Estimate</span>}
                   </div>
-                  <p className="text-3xl font-bold text-indigo-600">{aiRecommendations.prepTime} min</p>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-indigo-600">{aiRecommendations.prepTime} min</p>
+                  </div>
                 </div>
 
                 <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg">
-                  <div className="flex items-center space-x-2 mb-4">
+                  <div className="flex items-center justify-center space-x-2 mb-4">
                     <Apple className="h-5 w-5 text-green-600" />
                     <h3 className="text-xl font-semibold">Nutritional Value</h3>
                     {!aiRecommendations.aiGenerated && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Smart Estimate</span>}
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>Calories: <span className="font-semibold">{aiRecommendations.nutrition.calories}</span></div>
-                    <div>Protein: <span className="font-semibold">{aiRecommendations.nutrition.protein}g</span></div>
-                    <div>Carbs: <span className="font-semibold">{aiRecommendations.nutrition.carbs}g</span></div>
-                    <div>Fat: <span className="font-semibold">{aiRecommendations.nutrition.fat}g</span></div>
+                  <div className="grid grid-cols-2 gap-2 text-sm max-w-xs mx-auto">
+                    <div className="text-center">Calories: <span className="font-semibold block">{aiRecommendations.nutrition.calories}</span></div>
+                    <div className="text-center">Protein: <span className="font-semibold block">{aiRecommendations.nutrition.protein}g</span></div>
+                    <div className="text-center">Carbs: <span className="font-semibold block">{aiRecommendations.nutrition.carbs}g</span></div>
+                    <div className="text-center">Fat: <span className="font-semibold block">{aiRecommendations.nutrition.fat}g</span></div>
                   </div>
                 </div>
 
