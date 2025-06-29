@@ -9,6 +9,12 @@
       }
     }
   ],
+  "rewrites": [
+    { "source": "/data/:match*", "destination": "/data/:match*" },
+    { "source": "/assets/:match*", "destination": "/assets/:match*" },
+    { "source": "/:all*(js|css|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)", "destination": "/:all*" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -18,24 +24,6 @@
           "value": "script-src 'self' 'unsafe-eval'; object-src 'none';"
         }
       ]
-    }
-  ],
-  "routes": [
-    {
-      "src": "/data/(.*)",
-      "dest": "/data/$1"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/(.*\\.(js|css|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot))",
-      "dest": "/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
     }
   ]
 }
