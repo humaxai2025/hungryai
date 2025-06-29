@@ -14,6 +14,8 @@ const App = () => {
   const [aiRecommendations, setAiRecommendations] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [recipesLoading, setRecipesLoading] = useState(false);
+
 
   const parseIngredients = (ingredientsStr) => {
     try {
