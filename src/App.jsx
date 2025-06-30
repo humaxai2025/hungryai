@@ -1315,38 +1315,7 @@ Optimize for the specific context requirements.`;
                     </div>
                   ))}
                 </div>
-              )}d">"I want to eat chicken tikka masala"</div>
-                    <div className="bg-gray-100 px-2 py-1 rounded">"Make me authentic pad thai"</div>
-                  </div>
-                </div>
-                
-                <div className="bg-white/60 rounded-xl p-4 text-left">
-                  <h3 className="font-semibold text-green-700 mb-2">🔍 Discovery</h3>
-                  <p className="text-sm text-gray-600 mb-2">Get suggestions to choose from:</p>
-                  <div className="text-xs space-y-1">
-                    <div className="bg-gray-100 px-2 py-1 rounded">"What's the best dish for naan bread?"</div>
-                    <div className="bg-gray-100 px-2 py-1 rounded">"What goes well with jasmine rice?"</div>
-                  </div>
-                </div>
-                
-                <div className="bg-white/60 rounded-xl p-4 text-left">
-                  <h3 className="font-semibold text-orange-700 mb-2">🥘 Ingredients</h3>
-                  <p className="text-sm text-gray-600 mb-2">Use what you have:</p>
-                  <div className="text-xs space-y-1">
-                    <div className="bg-gray-100 px-2 py-1 rounded">"I have chicken, onions, and rice"</div>
-                    <div className="bg-gray-100 px-2 py-1 rounded">"Recipe with tomatoes and basil"</div>
-                  </div>
-                </div>
-                
-                <div className="bg-white/60 rounded-xl p-4 text-left">
-                  <h3 className="font-semibold text-purple-700 mb-2">⚡ Context</h3>
-                  <p className="text-sm text-gray-600 mb-2">Perfect for your situation:</p>
-                  <div className="text-xs space-y-1">
-                    <div className="bg-gray-100 px-2 py-1 rounded">"Quick lunch for office"</div>
-                    <div className="bg-gray-100 px-2 py-1 rounded">"Healthy dinner for weight loss"</div>
-                  </div>
-                </div>
-              </div>
+              )}
               
               {/* Search Box */}
               <div className="relative max-w-2xl mx-auto">
