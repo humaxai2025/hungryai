@@ -525,8 +525,96 @@ Optimize for the specific context requirements.`;
     }
   };
 
+  // AI Image Generation Function
+  const generateRecipeImage = async (recipeName, description) => {
+    const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+    const HF_API_KEY = import.meta.env.VITE_HF_API_KEY;
+    
+    try {
+      // Try DALL-E first (best quality)
+      if (OPENAI_API_KEY && OPENAI_API_KEY.length > 20) {
+        console.log('🎨 Generating DALL-E image...');
+        
+        const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: "dall-e-3",
+            prompt: `A beautiful, appetizing photo of ${recipeName}, ${description}. Professional food photography, vibrant colors, restaurant quality presentation, high resolution, natural lighting, closeup view.`,
+            size: "1024x1024",
+            quality: "standard",
+            n: 1
+          })
+        });
+
+        if (dalleResponse.ok) {
+          const dalleResult = await dalleResponse.json();
+          if (dalleResult.data && dalleResult.data[0]) {
+            console.log('✅ DALL-E image generated successfully!');
+            return dalleResult.data[0].url;
+          }
+        } else {
+          console.log('❌ DALL-E failed:', dalleResponse.status);
+        }
+      }
+
+      // Fallback to Hugging Face Stable Diffusion
+      if (HF_API_KEY && HF_API_KEY.startsWith('hf_')) {
+        console.log('🎨 Trying Stable Diffusion image generation...');
+        
+        const stableDiffusionModels = [
+          'stabilityai/stable-diffusion-2-1',
+          'runwayml/stable-diffusion-v1-5'
+        ];
+
+        for (const model of stableDiffusionModels) {
+          try {
+            const sdResponse = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${HF_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                inputs: `professional food photography of ${recipeName}, delicious, appetizing, high quality, restaurant presentation, vibrant colors, natural lighting, detailed, masterpiece`,
+                parameters: {
+                  guidance_scale: 7.5,
+                  num_inference_steps: 50
+                },
+                options: {
+                  wait_for_model: true
+                }
+              })
+            });
+
+            if (sdResponse.ok) {
+              const imageBlob = await sdResponse.blob();
+              const imageUrl = URL.createObjectURL(imageBlob);
+              console.log(`✅ ${model.split('/')[1]} image generated!`);
+              return imageUrl;
+            } else {
+              console.log(`❌ ${model.split('/')[1]} failed:`, sdResponse.status);
+              continue;
+            }
+          } catch (error) {
+            console.log(`❌ ${model.split('/')[1]} error:`, error.message);
+            continue;
+          }
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('AI image generation error:', error);
+      return null;
+    }
+  };
+
   // Parse complete recipe from AI
-  const parseCompleteRecipe = (aiText) => {
+  const parseCompleteRecipe = async (aiText) => {
     const nameMatch = aiText.match(/RECIPE_NAME:\s*([^\n\r]+)/i);
     const descMatch = aiText.match(/DESCRIPTION:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z_]+:|$)/i);
     const prepTimeMatch = aiText.match(/PREP_TIME:\s*(\d+)/i);
@@ -572,9 +660,16 @@ Optimize for the specific context requirements.`;
     const alt2Match = aiText.match(/Alt2:\s*([^\n\r]+)/i);
     const alt3Match = aiText.match(/Alt3:\s*([^\n\r]+)/i);
     
+    const recipeName = nameMatch ? nameMatch[1].trim() : 'Delicious Recipe';
+    const description = descMatch ? descMatch[1].trim() : 'A wonderful dish to try!';
+    
+    // Generate AI image for the recipe
+    console.log('🎨 Generating AI image for recipe...');
+    const aiImage = await generateRecipeImage(recipeName, description);
+    
     return {
-      name: nameMatch ? nameMatch[1].trim() : 'Delicious Recipe',
-      description: descMatch ? descMatch[1].trim() : 'A wonderful dish to try!',
+      name: recipeName,
+      description: description,
       prepTime: prepTimeMatch ? parseInt(prepTimeMatch[1]) : 45,
       servings: servingsMatch ? parseInt(servingsMatch[1]) : 4,
       ingredients: ingredients.length > 0 ? ingredients : ['Various ingredients as needed'],
@@ -609,6 +704,7 @@ Optimize for the specific context requirements.`;
           ratio: '1:1'
         }
       ],
+      aiImage: aiImage, // Include the generated AI image
       aiGenerated: true
     };
   };
@@ -717,6 +813,7 @@ Optimize for the specific context requirements.`;
         alternateIngredients: enhancedRecipe.alternatives,
         culturalInfo: enhancedRecipe.culturalInfo,
         aiInstructions: enhancedRecipe.instructions,
+        aiImage: enhancedRecipe.aiImage, // Include AI image from enhanced recipe
         aiGenerated: true,
         contextualNotes: enhancedRecipe.contextualNotes
       });
@@ -1017,14 +1114,32 @@ Optimize for the specific context requirements.`;
                 </div>
               )}
               
-              {/* Recipe Image Placeholder */}
-              <div className="w-full h-64 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl mb-6 flex items-center justify-center">
-                <div className="text-center">
-                  <ChefHat className="h-20 w-20 text-indigo-600 mx-auto mb-4" />
-                  <p className="text-indigo-800 font-semibold">{selectedRecipe.name}</p>
-                  <p className="text-xs text-indigo-600 mt-2">🤖 AI-Generated Recipe</p>
+              {/* Recipe Image - AI Generated or Placeholder */}
+              {selectedRecipe.aiImage || aiRecommendations?.aiImage ? (
+                <div className="relative">
+                  <img 
+                    src={selectedRecipe.aiImage || aiRecommendations.aiImage} 
+                    alt={`AI-generated ${selectedRecipe.name}`}
+                    className="w-full h-64 object-cover rounded-xl mb-6"
+                    onError={(e) => { 
+                      console.log('❌ AI image failed to load');
+                      e.target.style.display = 'none'; 
+                    }}
+                  />
+                  <div className="absolute top-2 right-2 bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                    🎨 AI Generated Image
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="w-full h-64 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl mb-6 flex items-center justify-center">
+                  <div className="text-center">
+                    <ChefHat className="h-20 w-20 text-indigo-600 mx-auto mb-4" />
+                    <p className="text-indigo-800 font-semibold">{selectedRecipe.name}</p>
+                    <p className="text-xs text-indigo-600 mt-2">🤖 AI-Generated Recipe</p>
+                    {loading && <p className="text-xs text-indigo-600 mt-2">🎨 Generating AI image...</p>}
+                  </div>
+                </div>
+              )}
               
               {/* Ingredients List */}
               <div className="mb-6">
