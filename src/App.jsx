@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Clock, Apple, Utensils, BookOpen, Sparkles, AlertCircle, ChevronLeft, ChevronRight, Share2, Heart, MapPin, Calendar, Award, Lightbulb, X } from 'lucide-react';
+import { Search, Clock, Apple, Utensils, BookOpen, Sparkles, AlertCircle, ChevronLeft, ChevronRight, Share2, Heart, MapPin, Calendar, Award, Lightbulb, X, Plus, ArrowRight, Loader } from 'lucide-react';
 
-// Custom ChefHat component to avoid icon loading issues
+// Custom ChefHat component
 const ChefHat = ({ className = "h-5 w-5" }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
     <path d="M17.5 11c.276 0 .5-.224.5-.5s-.224-.5-.5-.5-.5.224-.5.5.224.5.5.5zm-11 0c.276 0 .5-.224.5-.5s-.224-.5-.5-.5-.5.224-.5.5.224.5.5.5zm13.5-6c0-1.654-1.346-3-3-3-.771 0-1.468.301-2 .78-.532-.479-1.229-.78-2-.78s-1.468.301-2 .78c-.532-.479-1.229-.78-2-.78s-1.468.301-2 .78c-.532-.479-1.229-.78-2-.78-1.654 0-3 1.346-3 3v1c0 1.654 1.346 3 3 3h.184l1.316 7h11l1.316-7h.184c1.654 0 3-1.346 3-3v-1zm-2 1c0 .551-.449 1-1 1h-12c-.551 0-1-.449-1-1v-1c0-.551.449-1 1-1s1 .449 1 1h2c0-.551.449-1 1-1s1 .449 1 1h2c0-.551.449-1 1-1s1 .449 1 1h2c0-.551.449-1 1-1s1 .449 1 1h2c0-.551.449-1 1-1s1 .449 1 1v1z"/>
@@ -14,13 +14,11 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
   const [isSharing, setIsSharing] = useState(false);
   const [liked, setLiked] = useState(false);
 
-  // Generate story cards from cultural information
   const generateStoryCards = () => {
     if (!culturalInfo) return [];
 
     const cards = [];
 
-    // Card 1: Recipe Introduction with cultural badge
     cards.push({
       type: 'intro',
       title: recipe.name,
@@ -31,7 +29,6 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
       badge: getCulturalBadge(recipe.name)
     });
 
-    // Card 2: Origin Story
     if (culturalInfo.origin) {
       cards.push({
         type: 'origin',
@@ -44,7 +41,6 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
       });
     }
 
-    // Card 3: Cultural Significance
     if (culturalInfo.significance) {
       cards.push({
         type: 'significance',
@@ -52,12 +48,10 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
         subtitle: 'Traditional Meaning',
         content: culturalInfo.significance,
         background: 'bg-gradient-to-br from-emerald-500 to-teal-600',
-        icon: <Award className="h-6 w-6 text-white" />,
-        timeline: getHistoricalTimeline(recipe.name)
+        icon: <Award className="h-6 w-6 text-white" />
       });
     }
 
-    // Card 4: Traditional Serving
     if (culturalInfo.serving) {
       cards.push({
         type: 'serving',
@@ -65,25 +59,10 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
         subtitle: 'How It\'s Enjoyed',
         content: culturalInfo.serving,
         background: 'bg-gradient-to-br from-orange-500 to-red-500',
-        icon: <Utensils className="h-6 w-6 text-white" />,
-        funFact: getServingFact(recipe.name)
+        icon: <Utensils className="h-6 w-6 text-white" />
       });
     }
 
-    // Card 5: Seasonal Connection
-    if (culturalInfo.season) {
-      cards.push({
-        type: 'season',
-        title: 'Seasonal Traditions',
-        subtitle: 'When It\'s Celebrated',
-        content: culturalInfo.season,
-        background: 'bg-gradient-to-br from-amber-500 to-yellow-500',
-        icon: <Calendar className="h-6 w-6 text-white" />,
-        celebration: getCelebrationInfo(recipe.name)
-      });
-    }
-
-    // Card 6: Cooking Tips & Wisdom
     if (culturalInfo.tips) {
       cards.push({
         type: 'tips',
@@ -91,8 +70,7 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
         subtitle: 'Traditional Techniques',
         content: culturalInfo.tips,
         background: 'bg-gradient-to-br from-violet-500 to-purple-600',
-        icon: <Lightbulb className="h-6 w-6 text-white" />,
-        masterTip: getMasterTip(recipe.name)
+        icon: <Lightbulb className="h-6 w-6 text-white" />
       });
     }
 
@@ -121,7 +99,6 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
           url: window.location.href
         });
       } else {
-        // Fallback for browsers without native sharing
         const shareText = `🍳 ${recipe.name} - ${currentCardData.title}\n\n${currentCardData.content}\n\nDiscover more cultural recipes on FlavorAI! ${window.location.href}`;
         await navigator.clipboard.writeText(shareText);
         alert('Content copied to clipboard!');
@@ -139,7 +116,6 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
       <div className="relative w-full max-w-md">
-        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors z-10"
@@ -147,9 +123,7 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
           <X className="h-8 w-8" />
         </button>
 
-        {/* Story Card */}
         <div className={`relative w-full h-96 rounded-2xl shadow-2xl overflow-hidden ${currentCardData.background}`}>
-          {/* Header */}
           <div className="absolute top-0 left-0 right-0 p-6 bg-black bg-opacity-20">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -160,7 +134,6 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
                 </div>
               </div>
               
-              {/* Cultural Badge */}
               {currentCardData.badge && (
                 <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full">
                   <span className="text-white text-xs font-semibold">{currentCardData.badge}</span>
@@ -169,12 +142,10 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
             </div>
           </div>
 
-          {/* Content */}
           <div className="absolute inset-0 flex flex-col justify-center px-6 pt-20 pb-20">
             <div className="text-center text-white">
               <p className="text-lg leading-relaxed mb-4">{currentCardData.content}</p>
               
-              {/* Special content based on card type */}
               {currentCardData.didYouKnow && (
                 <div className="bg-white bg-opacity-20 rounded-lg p-4 mb-4">
                   <div className="flex items-center space-x-2 mb-2">
@@ -184,45 +155,9 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
                   <p className="text-sm">{currentCardData.didYouKnow}</p>
                 </div>
               )}
-
-              {currentCardData.timeline && (
-                <div className="bg-white bg-opacity-20 rounded-lg p-4 mb-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Calendar className="h-5 w-5" />
-                    <span className="font-semibold">Historical Timeline</span>
-                  </div>
-                  <div className="text-sm space-y-1">
-                    {currentCardData.timeline.map((event, index) => (
-                      <div key={index} className="flex justify-between">
-                        <span className="font-medium">{event.year}</span>
-                        <span>{event.event}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {currentCardData.funFact && (
-                <div className="bg-white bg-opacity-20 rounded-lg p-3 mb-4">
-                  <p className="text-sm font-medium">💡 {currentCardData.funFact}</p>
-                </div>
-              )}
-
-              {currentCardData.celebration && (
-                <div className="bg-white bg-opacity-20 rounded-lg p-3 mb-4">
-                  <p className="text-sm">🎉 {currentCardData.celebration}</p>
-                </div>
-              )}
-
-              {currentCardData.masterTip && (
-                <div className="bg-white bg-opacity-20 rounded-lg p-3 mb-4">
-                  <p className="text-sm">👨‍🍳 Master's Tip: {currentCardData.masterTip}</p>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Footer with actions */}
           <div className="absolute bottom-0 left-0 right-0 p-6 bg-black bg-opacity-20">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -241,7 +176,6 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
                 </button>
               </div>
               
-              {/* Progress indicators */}
               <div className="flex space-x-2">
                 {storyCards.map((_, index) => (
                   <div
@@ -255,7 +189,6 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
             </div>
           </div>
 
-          {/* Navigation arrows */}
           {storyCards.length > 1 && (
             <>
               <button
@@ -274,7 +207,6 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
           )}
         </div>
 
-        {/* Card counter */}
         <div className="text-center mt-4 text-white">
           <span className="text-sm">{currentCard + 1} of {storyCards.length}</span>
         </div>
@@ -283,7 +215,7 @@ const CulturalStoryCards = ({ recipe, culturalInfo, onClose }) => {
   );
 };
 
-// Helper functions for generating cultural content
+// Helper functions for cultural badges and facts
 const getCulturalBadge = (recipeName) => {
   const badges = {
     'paneer': 'Mughal Heritage',
@@ -324,92 +256,10 @@ const getDidYouKnowFact = (recipeName) => {
   return 'This dish has traveled through countless generations, carrying stories and traditions in every bite.';
 };
 
-const getHistoricalTimeline = (recipeName) => {
-  const timelines = {
-    'biryani': [
-      { year: '1398', event: 'Timur brings pilaf to India' },
-      { year: '1526', event: 'Mughal Empire establishes' },
-      { year: '1650', event: 'Biryani perfected in courts' }
-    ],
-    'pizza': [
-      { year: '1889', event: 'Pizza Margherita created' },
-      { year: '1905', event: 'First US pizzeria opens' },
-      { year: '1958', event: 'Pizza Hut founded' }
-    ],
-    'tofu': [
-      { year: '206 BC', event: 'Tofu invented in China' },
-      { year: '710 AD', event: 'Reaches Japan' },
-      { year: '1960s', event: 'Becomes popular in West' }
-    ]
-  };
-  
-  for (const [key, timeline] of Object.entries(timelines)) {
-    if (recipeName.toLowerCase().includes(key)) {
-      return timeline;
-    }
-  }
-  return [
-    { year: 'Ancient', event: 'Recipe origins' },
-    { year: 'Medieval', event: 'Trade spreads recipe' },
-    { year: 'Modern', event: 'Global popularity' }
-  ];
-};
-
-const getServingFact = (recipeName) => {
-  const facts = {
-    'biryani': 'Traditionally served on banana leaves with each grain of rice separate and aromatic.',
-    'pizza': 'In Naples, pizza is eaten with a fork and knife, never by hand!',
-    'tofu': 'Best enjoyed family-style with chopsticks, emphasizing community dining.',
-    'curry': 'Served with rice and eaten by hand, mixing flavors with each bite.'
-  };
-  
-  for (const [key, fact] of Object.entries(facts)) {
-    if (recipeName.toLowerCase().includes(key)) {
-      return fact;
-    }
-  }
-  return 'Best shared with loved ones around a table full of conversation.';
-};
-
-const getCelebrationInfo = (recipeName) => {
-  const celebrations = {
-    'biryani': 'Essential at weddings, festivals, and Eid celebrations across South Asia.',
-    'pizza': 'A staple of Italian festivals and family Sunday dinners.',
-    'tofu': 'Featured in Buddhist temple festivals and vegetarian celebrations.',
-    'curry': 'Central to Diwali feasts and harvest festivals.'
-  };
-  
-  for (const [key, celebration] of Object.entries(celebrations)) {
-    if (recipeName.toLowerCase().includes(key)) {
-      return celebration;
-    }
-  }
-  return 'Enjoyed during special occasions and family gatherings.';
-};
-
-const getMasterTip = (recipeName) => {
-  const tips = {
-    'biryani': 'Cook with the "dum" method - seal the pot and cook slowly to trap all the aromas.',
-    'pizza': 'The secret is a blazing hot oven - Neapolitan ovens reach 900°F!',
-    'tofu': 'Press the tofu for 30 minutes to remove moisture for maximum crispiness.',
-    'curry': 'Toast whole spices before grinding for deeper, more complex flavors.'
-  };
-  
-  for (const [key, tip] of Object.entries(tips)) {
-    if (recipeName.toLowerCase().includes(key)) {
-      return tip;
-    }
-  }
-  return 'Patience and love are the most important ingredients in any traditional recipe.';
-};
-
 const App = () => {
-  const [recipes, setRecipes] = useState([]);
-  const [recipesLoading, setRecipesLoading] = useState(false);
-  const [recipesError, setRecipesError] = useState(null);
-
-  // other state:
+  // Main state
   const [searchQuery, setSearchQuery] = useState('');
+  const [queryPattern, setQueryPattern] = useState(null); // 'direct', 'discovery', 'ingredients', 'context'
   const [searchResults, setSearchResults] = useState([]);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [aiRecommendations, setAiRecommendations] = useState(null);
@@ -418,518 +268,208 @@ const App = () => {
   const [apiKeyError, setApiKeyError] = useState(false);
   const [showCulturalCards, setShowCulturalCards] = useState(false);
 
-  // Embedded recipe data - Clean recipes without hardcoded cultural information
-  const fallbackRecipes = [
-    {
-      "name": "Paneer Biryani",
-      "collection": "collection/indian-recipes/",
-      "recipie_collection_idx": 1,
-      "image": null, // Will trigger AI image generation
-      "descripition": "A fragrant and flavorful rice dish with marinated paneer, aromatic spices, and basmati rice layered to perfection.",
-      "ingredients": "['2 cups basmati rice', '250g paneer cubes', '1 large onion sliced', '1/2 cup yogurt', '2 tbsp ginger-garlic paste', '1 tsp red chili powder', '1/2 tsp turmeric', '1 tsp garam masala', '4-5 green cardamom', '2 bay leaves', '1 cinnamon stick', 'Saffron soaked in milk', 'Fresh mint leaves', 'Fried onions', 'Ghee', 'Salt to taste']",
-      "steps": "['Soak basmati rice for 30 minutes', 'Marinate paneer with yogurt, ginger-garlic paste, and spices', 'Fry onions until golden brown', 'Cook rice until 70% done with whole spices', 'Layer marinated paneer, rice, fried onions, mint, and saffron milk', 'Cook on high heat for 2 minutes, then simmer for 45 minutes', 'Let it rest for 10 minutes before serving']",
-      "Neutretion": "<p>Per serving: 420 calories, 15g fat, 18g protein, 52g carbohydrates, 3g fiber</p>"
-    },
-    {
-      "name": "Chickpea & Potato Curry",
-      "collection": "collection/vegan-recipes/",
-      "recipie_collection_idx": 2,
-      "image": null,
-      "descripition": "A classic Indian chickpea curry made with aromatic spices, tender potatoes, and rich tomato-based gravy.",
-      "ingredients": "['1 tablespoon canola oil', '1 medium onion chopped', '2 garlic cloves minced', '2 teaspoons minced fresh gingerroot', '2 teaspoons ground coriander', '1 teaspoon garam masala', '1 teaspoon chili powder', '1/2 teaspoon salt', '1/2 teaspoon ground cumin', '1/4 teaspoon ground turmeric', '1 can crushed tomatoes', '2 cans chickpeas drained', '1 large baking potato cubed', '2-1/2 cups vegetable stock', '1 tablespoon lime juice', 'Fresh cilantro', 'Cooked rice']",
-      "steps": "['Heat oil in large skillet over medium-high heat', 'Saute onion until tender 2-4 minutes', 'Add garlic ginger and dry seasonings cook 1 minute', 'Stir in tomatoes transfer to slow cooker', 'Add chickpeas potato and stock', 'Cook covered on low 6-8 hours until potato tender', 'Stir in lime juice sprinkle with cilantro', 'Serve with rice']",
-      "Neutretion": "<p>Per serving: 240 calories, 6g fat, 8g protein, 42g carbohydrate, 9g fiber</p>"
-    },
-    {
-      "name": "Crispy Tofu with Black Pepper Sauce",
-      "collection": "collection/vegan-recipes/",
-      "recipie_collection_idx": 3,
-      "image": null,
-      "descripition": "Crispy golden tofu cubes tossed in a savory black pepper sauce with fresh vegetables.",
-      "ingredients": "['2 tablespoons reduced-sodium soy sauce', '2 tablespoons chili garlic sauce', '1 tablespoon packed brown sugar', '1 tablespoon rice vinegar', '4 green onions', '8 ounces extra-firm tofu drained', '3 tablespoons cornstarch', '6 tablespoons canola oil divided', '8 ounces fresh sugar snap peas', '1 teaspoon freshly ground pepper', '3 garlic cloves minced', '2 teaspoons grated fresh gingerroot']",
-      "steps": "['Mix soy sauce chili garlic sauce brown sugar and rice vinegar', 'Mince white parts of green onions slice green parts', 'Cut tofu into cubes pat dry toss with cornstarch', 'Heat 4 tablespoons oil cook tofu until crisp 5-7 minutes', 'Remove tofu drain on paper towels', 'Heat 1 tablespoon oil stir-fry peas until crisp-tender', 'Heat remaining oil cook pepper 30 seconds', 'Add garlic ginger minced onions stir-fry 30-45 seconds', 'Add sauce mixture cook until thickened', 'Stir in tofu and peas sprinkle with sliced onions']",
-      "Neutretion": "<p>Per serving: 316 calories, 24g fat, 7g protein, 20g carbohydrate, 2g fiber</p>"
-    },
-    {
-      "name": "Margherita Pizza",
-      "collection": "collection/italian-recipes/",
-      "recipie_collection_idx": 4,
-      "image": null,
-      "descripition": "Classic Italian pizza with fresh tomatoes, mozzarella, and basil on a crispy thin crust.",
-      "ingredients": "['1 pizza dough ball', '1/2 cup pizza sauce', '8 oz fresh mozzarella sliced', '2 large tomatoes sliced', 'Fresh basil leaves', '2 tablespoons olive oil', 'Salt and pepper to taste', 'Parmesan cheese grated']",
-      "steps": "['Preheat oven to 475°F', 'Roll out pizza dough on floured surface', 'Transfer to pizza stone or baking sheet', 'Brush with olive oil', 'Spread pizza sauce evenly', 'Add mozzarella and tomato slices', 'Season with salt and pepper', 'Bake 12-15 minutes until crust is golden', 'Top with fresh basil and parmesan', 'Slice and serve immediately']",
-      "Neutretion": "<p>Per slice: 285 calories, 12g fat, 14g protein, 32g carbohydrate, 2g fiber</p>"
-    },
-    {
-      "name": "Chicken Teriyaki Bowl",
-      "collection": "collection/asian-recipes/",
-      "recipie_collection_idx": 5,
-      "image": null,
-      "descripition": "Tender grilled chicken glazed with homemade teriyaki sauce served over steamed rice with vegetables.",
-      "ingredients": "['2 chicken breasts', '1/4 cup soy sauce', '2 tablespoons mirin', '2 tablespoons brown sugar', '1 tablespoon rice vinegar', '1 teaspoon sesame oil', '2 cloves garlic minced', '1 teaspoon ginger grated', '2 cups cooked rice', '1 cup broccoli florets', '1 carrot julienned', 'Sesame seeds', 'Green onions sliced']",
-      "steps": "['Mix soy sauce mirin brown sugar vinegar sesame oil garlic and ginger for teriyaki sauce', 'Marinate chicken in half the sauce for 30 minutes', 'Grill chicken 6-7 minutes per side until cooked through', 'Steam broccoli and carrots until tender-crisp', 'Slice chicken and glaze with remaining teriyaki sauce', 'Serve over rice with vegetables', 'Garnish with sesame seeds and green onions']",
-      "Neutretion": "<p>Per serving: 380 calories, 8g fat, 35g protein, 45g carbohydrate, 3g fiber</p>"
-    },
-    {
-      "name": "Mediterranean Quinoa Salad",
-      "collection": "collection/healthy-recipes/",
-      "recipie_collection_idx": 6,
-      "image": null,
-      "descripition": "Fresh and vibrant quinoa salad with cucumbers, tomatoes, olives, and feta cheese in a lemon herb dressing.",
-      "ingredients": "['1 cup quinoa', '2 cups vegetable broth', '1 cucumber diced', '2 cups cherry tomatoes halved', '1/2 red onion thinly sliced', '1/2 cup kalamata olives', '1/2 cup feta cheese crumbled', '1/4 cup olive oil', '2 tablespoons lemon juice', '2 tablespoons fresh parsley', '1 tablespoon fresh oregano', 'Salt and pepper to taste']",
-      "steps": "['Rinse quinoa in cold water', 'Bring vegetable broth to boil add quinoa', 'Reduce heat cover simmer 15 minutes until liquid absorbed', 'Fluff with fork and let cool completely', 'Dice cucumber halve tomatoes slice onion', 'Whisk olive oil lemon juice parsley oregano salt and pepper', 'Combine quinoa vegetables olives and feta', 'Toss with dressing', 'Chill for at least 30 minutes before serving']",
-      "Neutretion": "<p>Per serving: 320 calories, 16g fat, 12g protein, 38g carbohydrate, 5g fiber</p>"
+  // Smart Query Pattern Recognition
+  const detectQueryPattern = (query) => {
+    const lowerQuery = query.toLowerCase().trim();
+    
+    // Pattern 1: Direct Recipe Request
+    const directPatterns = [
+      /^(i want to eat|make me|i want|give me|cook|prepare)\s+(.+)/,
+      /^(.+)\s+(recipe|dish)$/,
+      /^how to (make|cook|prepare)\s+(.+)/
+    ];
+    
+    // Pattern 2: Discovery & Selection  
+    const discoveryPatterns = [
+      /^(what's the best|what goes with|what pairs with|recommend.*for)\s+(.+)/,
+      /^(suggestions for|ideas for|what to make with)\s+(.+)/,
+      /^(best dishes? for|good with)\s+(.+)/
+    ];
+    
+    // Pattern 3: Ingredient-Based
+    const ingredientPatterns = [
+      /^(i have|using|with)\s+(.+)/,
+      /^(.+)\s+(ingredients?|available)$/,
+      /^(recipe with|dish with|make with)\s+(.+)/
+    ];
+    
+    // Pattern 4: Context-Based
+    const contextPatterns = [
+      /^(quick|fast|easy|healthy|party|breakfast|lunch|dinner|snack)\s+(.+)/,
+      /^(.+)\s+(for (office|work|party|kids|diet))/,
+      /^(vegetarian|vegan|gluten.free|keto|low.carb)\s+(.+)/
+    ];
+    
+    for (const pattern of directPatterns) {
+      if (pattern.test(lowerQuery)) {
+        return { type: 'direct', query: lowerQuery };
+      }
     }
-  ];
-
-  const parseIngredients = (ingredientsStr) => {
-    try {
-      // Handle different ingredient formats
-      if (!ingredientsStr) return [];
-      
-      // If it's already an array
-      if (Array.isArray(ingredientsStr)) {
-        return ingredientsStr.map(ingredient => String(ingredient || ''));
+    
+    for (const pattern of discoveryPatterns) {
+      if (pattern.test(lowerQuery)) {
+        return { type: 'discovery', query: lowerQuery };
       }
-      
-      // If it's a string that looks like JSON array
-      if (typeof ingredientsStr === 'string') {
-        // Handle different bracket formats
-        if (ingredientsStr.startsWith('[') && ingredientsStr.endsWith(']')) {
-          // Clean up the string and try to parse as JSON
-          const cleanStr = ingredientsStr.replace(/^\[|\]$/g, '');
-          
-          // Split by comma and clean up quotes
-          const ingredients = cleanStr.split(',').map(ingredient => {
-            return ingredient.trim()
-              .replace(/^['"`]|['"`]$/g, '') // Remove surrounding quotes
-              .replace(/\\'/g, "'") // Unescape quotes
-              .trim();
-          }).filter(ingredient => ingredient.length > 0);
-          
-          return ingredients;
-        } else {
-          // Handle comma-separated string without brackets
-          return ingredientsStr.split(',').map(ingredient => ingredient.trim()).filter(ingredient => ingredient.length > 0);
-        }
-      }
-      
-      // If it's an object, try to extract meaningful data
-      if (typeof ingredientsStr === 'object') {
-        if (ingredientsStr.list && Array.isArray(ingredientsStr.list)) {
-          return ingredientsStr.list.map(ingredient => String(ingredient || ''));
-        }
-        // Convert object values to array
-        return Object.values(ingredientsStr).map(ingredient => String(ingredient || ''));
-      }
-      
-      // Fallback: convert to string and return as single item
-      return [String(ingredientsStr)];
-    } catch (error) {
-      console.warn('Error parsing ingredients:', error, 'Input:', ingredientsStr);
-      return ['Ingredients available - view recipe for details'];
     }
+    
+    for (const pattern of ingredientPatterns) {
+      if (pattern.test(lowerQuery)) {
+        return { type: 'ingredients', query: lowerQuery };
+      }
+    }
+    
+    for (const pattern of contextPatterns) {
+      if (pattern.test(lowerQuery)) {
+        return { type: 'context', query: lowerQuery };
+      }
+    }
+    
+    // Default to direct if no clear pattern
+    return { type: 'direct', query: lowerQuery };
   };
 
-  useEffect(() => {
-    const loadRecipes = async () => {
-      setRecipesLoading(true);
-      
-      try {
-        // Try to fetch from new primary data file
-        console.log('🔍 Loading recipes from recipedata.json...');
-        const response = await fetch('/data/recipedata.json');
-        if (response.ok) {
-          const fetchedData = await response.json();
-          console.log('📁 Raw data structure:', fetchedData);
-          
-          // Handle different JSON structures
-          let recipesArray = [];
-          if (Array.isArray(fetchedData)) {
-            recipesArray = fetchedData;
-          } else if (fetchedData.recipes && Array.isArray(fetchedData.recipes)) {
-            recipesArray = fetchedData.recipes;
-          } else if (fetchedData.data && Array.isArray(fetchedData.data)) {
-            recipesArray = fetchedData.data;
-          } else if (typeof fetchedData === 'object') {
-            // If it's an object, try to convert values to array
-            recipesArray = Object.values(fetchedData).filter(item => 
-              typeof item === 'object' && item.name
-            );
-          }
-          
-          // Validate and normalize recipe data
-          const normalizedRecipes = recipesArray.map((recipe, index) => ({
-            name: recipe.name || recipe.title || `Recipe ${index + 1}`,
-            collection: recipe.collection || 'collection/general/',
-            recipie_collection_idx: recipe.recipie_collection_idx || recipe.id || index + 1,
-            image: recipe.image || null,
-            descripition: recipe.descripition || recipe.description || recipe.desc || 'Delicious recipe to try!',
-            ingredients: recipe.ingredients || "['Various ingredients']",
-            steps: recipe.steps || "['Follow cooking instructions']",
-            Neutretion: recipe.Neutretion || recipe.nutrition || '<p>Nutritional information varies</p>'
-          }));
-          
-          console.log('✅ Successfully loaded', normalizedRecipes.length, 'recipes from recipedata.json');
-          console.log('📋 Sample recipe structure:', normalizedRecipes[0]);
-          setRecipes(normalizedRecipes);
-          setRecipesError(null);
-        } else {
-          throw new Error('Failed to load recipedata.json');
-        }
-      } catch (error) {
-        console.log('⚠️ Failed to load recipedata.json, trying recipe.json fallback:', error.message);
-        
-        try {
-          // Fallback to original recipe.json
-          const fallbackResponse = await fetch('/data/recipe.json');
-          if (fallbackResponse.ok) {
-            const fallbackData = await fallbackResponse.json();
-            
-            // Apply same normalization to fallback data
-            const fallbackArray = Array.isArray(fallbackData) ? fallbackData : [fallbackData];
-            const normalizedFallback = fallbackArray.map((recipe, index) => ({
-              name: recipe.name || `Recipe ${index + 1}`,
-              collection: recipe.collection || 'collection/general/',
-              recipie_collection_idx: recipe.recipie_collection_idx || index + 1,
-              image: recipe.image || null,
-              descripition: recipe.descripition || recipe.description || 'Delicious recipe to try!',
-              ingredients: recipe.ingredients || "['Various ingredients']",
-              steps: recipe.steps || "['Follow cooking instructions']",
-              Neutretion: recipe.Neutretion || '<p>Nutritional information varies</p>'
-            }));
-            
-            console.log('✅ Successfully loaded', normalizedFallback.length, 'recipes from recipe.json fallback');
-            setRecipes(normalizedFallback);
-            setRecipesError(null);
-          } else {
-            throw new Error('Both recipedata.json and recipe.json failed to load');
-          }
-        } catch (fallbackError) {
-          console.log('⚠️ All external sources failed, using embedded recipes:', fallbackError.message);
-          // Use embedded fallback recipes with cultural information
-          setRecipes(fallbackRecipes);
-          setRecipesError(null);
-        }
-      } finally {
-        setRecipesLoading(false);
-      }
-    };
-
-    loadRecipes();
-  }, []);
-
-  // Search functionality
-  const handleSearch = (query) => {
-    if (!query.trim() || !recipes || recipes.length === 0) {
-      setSearchResults([]);
-      setShowResults(false);
-      return;
-    }
-
-    // Ensure recipes is an array before filtering
-    if (!Array.isArray(recipes)) {
-      console.error('❌ Recipes is not an array:', recipes);
-      setSearchResults([]);
-      setShowResults(false);
-      return;
-    }
-
-    try {
-      const results = recipes.filter(recipe => {
-        // Safely handle recipe data
-        if (!recipe || typeof recipe !== 'object') return false;
-        
-        const recipeName = (recipe.name || '').toLowerCase();
-        const recipeDesc = (recipe.descripition || recipe.description || '').toLowerCase();
-        const recipeCollection = (recipe.collection || '').toLowerCase();
-        const queryLower = query.toLowerCase();
-        
-        // Parse ingredients safely
-        let ingredients = [];
-        try {
-          ingredients = parseIngredients(recipe.ingredients || '[]');
-        } catch (error) {
-          console.warn('Error parsing ingredients for recipe:', recipe.name, error);
-          ingredients = [];
-        }
-        
-        return (
-          recipeName.includes(queryLower) ||
-          recipeDesc.includes(queryLower) ||
-          ingredients.some(ingredient => 
-            (ingredient || '').toLowerCase().includes(queryLower)
-          ) ||
-          recipeCollection.includes(queryLower)
-        );
-      });
-
-      setSearchResults(results);
-      setShowResults(true);
-      console.log(`🔍 Search for "${query}" found ${results.length} results`);
-    } catch (error) {
-      console.error('❌ Search error:', error);
-      setSearchResults([]);
-      setShowResults(false);
-    }
-  };
-
-  const handleRecipeSelect = async (recipe) => {
-    console.log('🔍 DEBUG - Recipe selected:', recipe.name);
-    console.log('🔍 DEBUG - Original recipe steps (WILL BE IGNORED):', recipe.steps);
+  // AI-Native Recipe Generation
+  const generateAIResponse = async (pattern, query) => {
+    const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
     
-    // COMPLETELY BLOCK ACCESS TO ORIGINAL STEPS
-    const cleanRecipe = {
-      ...recipe,
-      steps: null // REMOVE original steps completely
-    };
-    
-    // Immediately set loading and clear previous state to prevent static content
-    setSelectedRecipe(cleanRecipe); // Use cleaned recipe
-    setLoading(true);
-    setAiRecommendations(null); // Clear previous recommendations immediately
-    setShowResults(false);
-    setApiKeyError(false);
-    
-    console.log('🔍 DEBUG - Set loading=true, aiRecommendations=null');
-    
-    // Call AI for recommendations with CLEANED recipe (no original steps)
-    await getAIRecommendations(cleanRecipe);
-  };
-
-  const getAIRecommendations = async (recipe) => {
-    console.log('🔍 DEBUG - Starting getAIRecommendations for:', recipe.name);
-    
-    try {
-      const ingredients = parseIngredients(recipe.ingredients);
-      
-      // Check for API keys
-      const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-      const HF_API_KEY = import.meta.env.VITE_HF_API_KEY;
-      const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-      
-      console.log('🔍 DEBUG - API Keys available:', {
-        gemini: !!GEMINI_API_KEY,
-        hf: !!HF_API_KEY,
-        openai: !!OPENAI_API_KEY
-      });
-      
-      let aiGenerated = false;
-      let aiResults = {
-        prepTime: estimatePrepTime(ingredients.length),
-        nutrition: estimateNutrition(recipe.name, ingredients),
-        alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
-        aiInstructions: null, // EXPLICITLY set to null - NO STATIC CONTENT EVER
-        aiImage: null // For AI-generated images
-      };
-      
-      console.log('🤖 Starting REAL AI analysis...');
-      
-      // Try Google Gemini first (most reliable)
-      if (GEMINI_API_KEY && GEMINI_API_KEY.length > 20) {
-        console.log('🚀 Attempting Google Gemini AI...');
-        
-        try {
-          const geminiResults = await performGeminiAnalysis(recipe, ingredients, GEMINI_API_KEY);
-          if (geminiResults.success) {
-            aiResults = geminiResults.data;
-            aiGenerated = true;
-            console.log('✅ Google Gemini AI analysis successful!');
-            console.log('🔍 DEBUG - Gemini aiInstructions:', geminiResults.data.aiInstructions);
-          }
-        } catch (error) {
-          console.log('🔄 Gemini failed, trying Hugging Face...', error.message);
-        }
-      }
-      
-      // Fallback to Hugging Face if Gemini failed
-      if (!aiGenerated && HF_API_KEY && HF_API_KEY.startsWith('hf_') && HF_API_KEY.length > 20) {
-        console.log('🔄 Trying reliable Hugging Face models...');
-        
-        try {
-          const hfResults = await performHuggingFaceAnalysis(recipe, ingredients, HF_API_KEY);
-          if (hfResults.success) {
-            aiResults = hfResults.data;
-            aiGenerated = true;
-            console.log('✅ Hugging Face AI analysis successful!');
-            console.log('🔍 DEBUG - HF aiInstructions:', hfResults.data.aiInstructions);
-          }
-        } catch (error) {
-          console.log('🔄 Hugging Face also failed:', error.message);
-        }
-      }
-
-      // Generate AI image if recipe doesn't have one
-      if (!recipe.image && (OPENAI_API_KEY || HF_API_KEY)) {
-        console.log('🎨 Generating AI image for recipe...');
-        try {
-          const aiImage = await generateRecipeImage(recipe, OPENAI_API_KEY, HF_API_KEY);
-          if (aiImage) {
-            aiResults.aiImage = aiImage;
-            console.log('✅ AI image generated successfully!');
-          }
-        } catch (error) {
-          console.log('🔄 AI image generation failed:', error.message);
-        }
-      }
-      
-      console.log('🔍 DEBUG - Final aiResults before setting:', aiResults);
-      console.log('🔍 DEBUG - aiGenerated:', aiGenerated);
-      console.log('🔍 DEBUG - aiInstructions in results:', aiResults.aiInstructions);
-      
-      // Set recommendations - NEVER include static instructions
-      setAiRecommendations({
-        ...aiResults,
-        aiGenerated: aiGenerated,
-        aiInstructions: aiResults.aiInstructions // Only AI instructions, never static
-      });
-
-      if (!aiGenerated && !GEMINI_API_KEY && !HF_API_KEY) {
-        setApiKeyError(true);
-      }
-
-    } catch (error) {
-      console.error('Error in AI recommendations:', error);
-      
-      const ingredients = parseIngredients(recipe.ingredients);
-      console.log('🔍 DEBUG - Setting fallback recommendations (no AI)');
-      setAiRecommendations({
-        prepTime: estimatePrepTime(ingredients.length),
-        nutrition: estimateNutrition(recipe.name, ingredients),
-        alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
-        culturalInfo: null,
-        aiInstructions: null, // NEVER SET STATIC INSTRUCTIONS
-        aiGenerated: false
-      });
-    } finally {
-      console.log('🔍 DEBUG - Setting loading=false');
-      setLoading(false);
-    }
-  };
-
-  // AI Image Generation Function
-  const generateRecipeImage = async (recipe, openaiKey, hfKey) => {
-    try {
-      // Try DALL-E first (best quality)
-      if (openaiKey && openaiKey.length > 20) {
-        console.log('🎨 Trying DALL-E image generation...');
-        
-        const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openaiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: "dall-e-3",
-            prompt: `A beautiful, appetizing photo of ${recipe.name}, ${recipe.descripition}. Professional food photography, vibrant colors, restaurant quality presentation, high resolution, natural lighting.`,
-            size: "1024x1024",
-            quality: "standard",
-            n: 1
-          })
-        });
-
-        if (dalleResponse.ok) {
-          const dalleResult = await dalleResponse.json();
-          if (dalleResult.data && dalleResult.data[0]) {
-            console.log('✅ DALL-E image generated successfully!');
-            return dalleResult.data[0].url;
-          }
-        } else {
-          console.log('❌ DALL-E failed:', dalleResponse.status);
-        }
-      }
-
-      // Fallback to Hugging Face Stable Diffusion
-      if (hfKey && hfKey.startsWith('hf_')) {
-        console.log('🎨 Trying Stable Diffusion image generation...');
-        
-        const stableDiffusionModels = [
-          'stabilityai/stable-diffusion-2-1',
-          'runwayml/stable-diffusion-v1-5',
-          'CompVis/stable-diffusion-v1-4'
-        ];
-
-        for (const model of stableDiffusionModels) {
-          try {
-            const sdResponse = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${hfKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                inputs: `professional food photography of ${recipe.name}, delicious, appetizing, high quality, restaurant presentation, vibrant colors, natural lighting`,
-                parameters: {
-                  guidance_scale: 7.5,
-                  num_inference_steps: 50
-                },
-                options: {
-                  wait_for_model: true
-                }
-              })
-            });
-
-            if (sdResponse.ok) {
-              const imageBlob = await sdResponse.blob();
-              const imageUrl = URL.createObjectURL(imageBlob);
-              console.log(`✅ ${model.split('/')[1]} image generated!`);
-              return imageUrl;
-            } else {
-              console.log(`❌ ${model.split('/')[1]} failed:`, sdResponse.status);
-              continue;
-            }
-          } catch (error) {
-            console.log(`❌ ${model.split('/')[1]} error:`, error.message);
-            continue;
-          }
-        }
-      }
-
-      return null;
-    } catch (error) {
-      console.error('AI image generation error:', error);
+    if (!GEMINI_API_KEY || GEMINI_API_KEY.length < 20) {
+      setApiKeyError(true);
       return null;
     }
-  };
 
-  // Google Gemini AI Analysis (Primary - Most Reliable) - 100% AI Generated
-  const performGeminiAnalysis = async (recipe, ingredients, apiKey) => {
     try {
-      const prompt = `Analyze this recipe and provide detailed cooking instructions along with cultural information:
+      let prompt = '';
+      
+      switch (pattern.type) {
+        case 'direct':
+          prompt = `Generate a complete recipe for: "${query}"
 
-Recipe: ${recipe.name}
-Description: ${recipe.descripition}
-Ingredients: ${ingredients.join(', ')}
+Please provide a detailed response in this EXACT format:
 
-Please provide EXACTLY in this format:
+RECIPE_NAME: [Name of the dish]
+DESCRIPTION: [Brief appetizing description in 1-2 sentences]
 PREP_TIME: [number between 15-120]
-CALORIES: [number between 150-800]
-PROTEIN: [number between 5-50]
-CARBS: [number between 10-100]
-FAT: [number between 2-40]
-ALT1: [alternative for ${ingredients[0] || 'main ingredient'}]
-ALT2: [alternative for ${ingredients[1] || 'second ingredient'}]
-ALT3: [alternative for ${ingredients[2] || 'third ingredient'}]
-ORIGIN: [specific country/region of origin with historical context]
-HISTORY: [detailed 2-3 sentence history of this dish including dates and cultural development]
-CULTURAL: [cultural significance, traditions, and symbolism in the origin culture]
-SEASON: [traditional season, festivals, or occasions when this dish is eaten]
-SERVING: [authentic traditional way this dish is served in its culture of origin]
-TIPS: [authentic cultural cooking tips and traditional techniques from the culture]
+SERVINGS: [number between 1-8]
 
-COOKING_INSTRUCTIONS:
-Please provide detailed step-by-step cooking instructions. Each step should start with "STEP:" and include specific techniques, temperatures, timing, and traditional methods:
+INGREDIENTS:
+- [ingredient 1 with quantity]
+- [ingredient 2 with quantity]
+- [continue for all ingredients]
 
-STEP: [First detailed cooking step with prep work, temperatures, and timing]
-STEP: [Second step with specific cooking techniques and visual cues]
-STEP: [Third step with traditional methods and tips]
-STEP: [Continue with all necessary cooking steps]
-STEP: [Final step with plating and serving suggestions]
+INSTRUCTIONS:
+1. [Detailed step 1 with technique and timing]
+2. [Detailed step 2 with technique and timing]
+3. [Continue with all cooking steps]
 
-Make sure to include at least 5-8 detailed cooking steps with traditional techniques and authentic preparation methods.`;
+NUTRITION:
+Calories: [number]
+Protein: [number]g
+Carbs: [number]g
+Fat: [number]g
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+CULTURAL_INFO:
+Origin: [Country/region with historical context]
+History: [2-3 sentences about dish history and cultural development]
+Significance: [Cultural importance and traditions]
+Traditional_Serving: [How it's traditionally served and eaten]
+Cooking_Tips: [Authentic techniques and cultural wisdom]
+
+ALTERNATIVES:
+Alt1: [substitute for main ingredient] (1:1 ratio)
+Alt2: [substitute for second ingredient] (1:1 ratio)
+Alt3: [substitute for third ingredient] (1:1 ratio)`;
+          break;
+          
+        case 'discovery':
+          prompt = `Suggest 4 dishes based on: "${query}"
+
+For each dish, provide:
+
+DISH_1:
+Name: [Dish name]
+Description: [Brief description why it's good for this query]
+Appeal: [What makes it special]
+
+DISH_2:
+Name: [Dish name]  
+Description: [Brief description why it's good for this query]
+Appeal: [What makes it special]
+
+DISH_3:
+Name: [Dish name]
+Description: [Brief description why it's good for this query] 
+Appeal: [What makes it special]
+
+DISH_4:
+Name: [Dish name]
+Description: [Brief description why it's good for this query]
+Appeal: [What makes it special]
+
+Provide variety in cuisines and cooking methods.`;
+          break;
+          
+        case 'ingredients':
+          prompt = `Suggest 4 recipes using: "${query}"
+
+For each recipe, optimize for the available ingredients:
+
+RECIPE_1:
+Name: [Recipe name]
+Description: [How it uses the available ingredients]
+Additional_Needed: [2-3 common ingredients to complete the dish]
+
+RECIPE_2:
+Name: [Recipe name]
+Description: [How it uses the available ingredients]
+Additional_Needed: [2-3 common ingredients to complete the dish]
+
+RECIPE_3:
+Name: [Recipe name]
+Description: [How it uses the available ingredients]
+Additional_Needed: [2-3 common ingredients to complete the dish]
+
+RECIPE_4:
+Name: [Recipe name]
+Description: [How it uses the available ingredients]
+Additional_Needed: [2-3 common ingredients to complete the dish]
+
+Focus on recipes that make the best use of available ingredients.`;
+          break;
+          
+        case 'context':
+          prompt = `Suggest 4 recipes for: "${query}"
+
+For each recipe, provide context-specific information:
+
+RECIPE_1:
+Name: [Recipe name]
+Description: [Why it's perfect for this context]
+Context_Benefits: [Specific advantages for this situation]
+Time_Required: [Preparation and cooking time]
+
+RECIPE_2:
+Name: [Recipe name]
+Description: [Why it's perfect for this context]
+Context_Benefits: [Specific advantages for this situation]
+Time_Required: [Preparation and cooking time]
+
+RECIPE_3:
+Name: [Recipe name]
+Description: [Why it's perfect for this context]
+Context_Benefits: [Specific advantages for this situation]
+Time_Required: [Preparation and cooking time]
+
+RECIPE_4:
+Name: [Recipe name]
+Description: [Why it's perfect for this context]
+Context_Benefits: [Specific advantages for this situation]
+Time_Required: [Preparation and cooking time]
+
+Optimize for the specific context requirements.`;
+          break;
+      }
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -939,10 +479,10 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
             parts: [{ text: prompt }]
           }],
           generationConfig: {
-            temperature: 0.4, // Slightly higher for more detailed instructions
+            temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 3000, // More tokens for detailed instructions
+            maxOutputTokens: 3000,
           }
         })
       });
@@ -955,585 +495,272 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
       const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
       if (aiText) {
-        console.log('🤖 Gemini full response:', aiText);
-        return parseGeminiResponse(aiText, ingredients, recipe);
+        console.log('🤖 AI Response:', aiText);
+        return parseAIResponse(aiText, pattern.type);
       }
 
-      throw new Error('No response from Gemini');
+      throw new Error('No response from AI');
     } catch (error) {
-      console.error('Gemini analysis error:', error);
-      return { success: false };
-    }
-  };
-
-  // Parse Gemini AI Response - Extract Cultural Information from AI
-  const parseGeminiResponse = (aiText, ingredients, recipe) => {
-    try {
-      const text = aiText.toUpperCase();
-      
-      // Extract nutritional values using regex
-      const prepMatch = text.match(/PREP_TIME:\s*(\d+)/);
-      const caloriesMatch = text.match(/CALORIES:\s*(\d+)/);
-      const proteinMatch = text.match(/PROTEIN:\s*(\d+)/);
-      const carbsMatch = text.match(/CARBS:\s*(\d+)/);
-      const fatMatch = text.match(/FAT:\s*(\d+)/);
-      const alt1Match = text.match(/ALT1:\s*([^\n\r]+)/);
-      const alt2Match = text.match(/ALT2:\s*([^\n\r]+)/);
-      const alt3Match = text.match(/ALT3:\s*([^\n\r]+)/);
-      
-      // Extract cultural information from AI - case insensitive
-      const originMatch = aiText.match(/ORIGIN:\s*([^\n\r]+)/i);
-      const historyMatch = aiText.match(/HISTORY:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
-      const culturalMatch = aiText.match(/CULTURAL:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
-      const seasonMatch = aiText.match(/SEASON:\s*([^\n\r]+)/i);
-      const servingMatch = aiText.match(/SERVING:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
-      const tipsMatch = aiText.match(/TIPS:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z]+:|$)/i);
-      
-      // Enhanced cooking instructions parsing
-      console.log('🔍 Searching for cooking instructions in AI response...');
-      let aiInstructions = [];
-      
-      // Method 1: Look for STEP: format
-      const stepMatches = aiText.match(/STEP:\s*([^\n\r]+)/gi);
-      if (stepMatches && stepMatches.length > 0) {
-        aiInstructions = stepMatches.map(match => {
-          const cleanStep = match.replace(/^STEP:\s*/i, '').trim();
-          return cleanStep;
-        });
-        console.log('🔍 Found STEP format instructions:', aiInstructions);
-      } else {
-        // Method 2: Look for numbered instructions (1., 2., etc.)
-        const numberedMatches = aiText.match(/\d+\.\s*([^\n\r]+(?:\n(?!\d+\.)[^\n\r]+)*)/gi);
-        if (numberedMatches && numberedMatches.length > 0) {
-          aiInstructions = numberedMatches.map(match => {
-            const cleanStep = match.replace(/^\d+\.\s*/, '').trim();
-            return cleanStep;
-          });
-          console.log('🔍 Found numbered instructions:', aiInstructions);
-        } else {
-          // Method 3: Split by sentences and look for cooking action words
-          const sentences = aiText.split(/[.!?]+/).filter(sentence => {
-            const s = sentence.trim().toLowerCase();
-            return s.length > 20 && (
-              s.includes('heat') || s.includes('add') || s.includes('cook') || 
-              s.includes('stir') || s.includes('mix') || s.includes('bake') || 
-              s.includes('fry') || s.includes('simmer') || s.includes('serve') ||
-              s.includes('remove') || s.includes('place') || s.includes('cover') ||
-              s.includes('reduce') || s.includes('boil') || s.includes('pour')
-            );
-          });
-          
-          if (sentences.length > 0) {
-            // Take up to 8 cooking sentences and clean them up
-            aiInstructions = sentences.slice(0, 8).map(sentence => {
-              return sentence.trim().charAt(0).toUpperCase() + sentence.trim().slice(1);
-            });
-            console.log('🔍 Found sentence-based instructions:', aiInstructions);
-          }
-        }
-      }
-
-      // Final cleanup and validation
-      aiInstructions = aiInstructions.filter(step => step && step.length > 10).slice(0, 10);
-      console.log('🤖 Final cleaned AI instructions:', aiInstructions);
-
-      const results = {
-        prepTime: prepMatch ? Math.max(15, Math.min(120, parseInt(prepMatch[1]))) : estimatePrepTime(ingredients.length),
-        nutrition: {
-          calories: caloriesMatch ? Math.max(150, Math.min(800, parseInt(caloriesMatch[1]))) : 300,
-          protein: proteinMatch ? Math.max(5, Math.min(50, parseInt(proteinMatch[1]))) : 15,
-          carbs: carbsMatch ? Math.max(10, Math.min(100, parseInt(carbsMatch[1]))) : 40,
-          fat: fatMatch ? Math.max(2, Math.min(40, parseInt(fatMatch[1]))) : 10
-        },
-        alternateIngredients: [
-          {
-            original: ingredients[0] || 'main ingredient',
-            substitute: alt1Match ? alt1Match[1].trim().toLowerCase() : 'similar ingredient',
-            ratio: '1:1'
-          },
-          {
-            original: ingredients[1] || 'second ingredient', 
-            substitute: alt2Match ? alt2Match[1].trim().toLowerCase() : 'similar ingredient',
-            ratio: '1:1'
-          },
-          {
-            original: ingredients[2] || 'third ingredient',
-            substitute: alt3Match ? alt3Match[1].trim().toLowerCase() : 'similar ingredient', 
-            ratio: '1:1'
-          }
-        ],
-        // AI-Generated Instructions - Enhanced with better parsing
-        aiInstructions: aiInstructions.length > 0 ? aiInstructions : null,
-        // 100% AI-Generated Cultural Information
-        culturalInfo: originMatch || historyMatch || culturalMatch || seasonMatch || servingMatch || tipsMatch ? {
-          origin: originMatch ? originMatch[1].trim() : 'Origin information not available',
-          history: historyMatch ? historyMatch[1].trim() : 'Historical information not available',
-          significance: culturalMatch ? culturalMatch[1].trim() : 'Cultural significance not available',
-          season: seasonMatch ? seasonMatch[1].trim() : 'Seasonal information not available',
-          serving: servingMatch ? servingMatch[1].trim() : 'Traditional serving information not available',
-          tips: tipsMatch ? tipsMatch[1].trim() : 'Cultural cooking tips not available'
-        } : null // No cultural info if AI didn't provide it
-      };
-
-      console.log('🤖 Final parsed results with instructions:', results);
-      return { success: true, data: results };
-    } catch (error) {
-      console.error('Error parsing Gemini response:', error);
-      return { success: false };
-    }
-  };
-
-  // Fallback cultural information functions
-  const getCulturalOrigin = (ingredients, recipe) => {
-    // Use embedded cultural context if available
-    if (recipe?.culturalContext?.origin) {
-      return recipe.culturalContext.origin;
-    }
-    
-    const culturalMarkers = {
-      'paneer': 'Northern India (Mughal Empire)',
-      'chickpeas': 'Indian Subcontinent & Middle East',
-      'tofu': 'China (Han Dynasty)',
-      'mozzarella': 'Naples, Italy', 
-      'soy sauce': 'China',
-      'quinoa': 'Andes Mountains (Peru & Bolivia)',
-      'garam masala': 'Indian Subcontinent',
-      'teriyaki': 'Japan',
-      'olive oil': 'Mediterranean Basin',
-      'coconut': 'Southeast Asia & Pacific Islands',
-      'basmati rice': 'Indian Subcontinent',
-      'feta cheese': 'Greece',
-      'oregano': 'Mediterranean'
-    };
-
-    for (const ingredient of ingredients) {
-      for (const [key, origin] of Object.entries(culturalMarkers)) {
-        if (ingredient.toLowerCase().includes(key)) {
-          return origin;
-        }
-      }
-    }
-    return 'Global fusion cuisine - a beautiful blend of world traditions';
-  };
-
-  const getCulturalHistory = (ingredients, recipe) => {
-    // Use embedded cultural context if available
-    if (recipe?.culturalContext?.history) {
-      return recipe.culturalContext.history;
-    }
-    
-    if (ingredients.some(i => i.toLowerCase().includes('paneer') || i.toLowerCase().includes('biryani'))) {
-      return 'Biryani was brought to India by Persian merchants and Mughal rulers in the 16th century. This aromatic rice dish represents the fusion of Persian cooking techniques with Indian spices and ingredients, becoming a symbol of royal cuisine.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('chickpeas') || i.toLowerCase().includes('chole'))) {
-      return 'Chickpeas have been cultivated for over 7,000 years, originating in the Middle East. They spread to India through ancient trade routes and became central to Punjabi cuisine, providing essential protein in vegetarian diets.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('tofu'))) {
-      return 'Tofu was invented in China over 2,000 years ago during the Han Dynasty. Buddhist monks adopted it as a meat substitute, spreading the technique throughout Asia. It represents mindful, plant-based eating in Eastern philosophy.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('mozzarella') || i.toLowerCase().includes('pizza'))) {
-      return 'Pizza Margherita was created in 1889 in Naples by pizzaiolo Raffaele Esposito to honor Queen Margherita of Savoy. The red tomatoes, white mozzarella, and green basil represented the Italian flag.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('teriyaki'))) {
-      return 'Teriyaki cooking technique originated in 17th century Japan. "Teri" means glaze and "yaki" means grilled. Originally used for fish, it spread to other proteins and became internationally popular in the 1960s.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('quinoa'))) {
-      return 'Quinoa has been cultivated in the Andes for over 5,000 years. The Incas called it "chisaya mama" (mother of all grains) and considered it sacred. It only gained global recognition in the 21st century as a superfood.';
-    }
-    return 'This dish represents the beautiful evolution of global cuisine, where traditional techniques meet modern ingredients and cross-cultural influences create new culinary traditions.';
-  };
-
-  const getCulturalSignificance = (ingredients, recipe) => {
-    // Use embedded cultural context if available
-    if (recipe?.culturalContext?.significance) {
-      return recipe.culturalContext.significance;
-    }
-    
-    if (ingredients.some(i => i.toLowerCase().includes('paneer') || i.toLowerCase().includes('biryani'))) {
-      return 'In Indian culture, biryani symbolizes abundance, celebration, and hospitality. It represents the vegetarian principle of ahimsa (non-violence) while showcasing the rich Mughal heritage. Often prepared for weddings, festivals, and important family gatherings.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('chickpeas'))) {
-      return 'Chickpeas represent sustenance and community in Indian culture. This dish embodies the principle of "sattvic" (pure) food in Hindu philosophy and is often prepared during religious fasting periods and community kitchens (langars).';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('tofu'))) {
-      return 'In Buddhist tradition, tofu represents compassion and mindfulness - providing nourishment without harm. It symbolizes the philosophy of simple living and respect for all life forms.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('rice'))) {
-      return 'Rice is considered sacred in many Asian cultures, symbolizing life, fertility, and prosperity. It forms the foundation of meals and is central to cultural ceremonies and hospitality.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('olive oil'))) {
-      return 'In Mediterranean culture, olive oil represents peace, wisdom, and the connection to ancient traditions. The olive tree is sacred, symbolizing endurance and the Mediterranean way of life.';
-    }
-    return 'This dish carries the stories and traditions of its culture, connecting us to generations of cooks who perfected these flavors and passed down their culinary wisdom.';
-  };
-
-  const getTraditionalSeason = (ingredients, recipe) => {
-    // Use embedded cultural context if available
-    if (recipe?.culturalContext?.season) {
-      return recipe.culturalContext.season;
-    }
-    
-    if (ingredients.some(i => i.toLowerCase().includes('biryani') || i.toLowerCase().includes('curry'))) {
-      return 'Traditionally enjoyed during cooler months, monsoon season, and festive periods like Diwali, Eid, and wedding celebrations';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('salad') || i.toLowerCase().includes('quinoa'))) {
-      return 'Perfect for summer when fresh vegetables are abundant, though enjoyed year-round as a healthy meal';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('pizza'))) {
-      return 'Enjoyed year-round, but traditionally best in summer when tomatoes and basil are at peak freshness';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('teriyaki'))) {
-      return 'Popular year-round, but especially during summer grilling season and outdoor gatherings';
-    }
-    return 'Enjoyed throughout the year, with ingredients adapted to seasonal availability and local harvests';
-  };
-
-  const getTraditionalServing = (ingredients, recipe) => {
-    // Use embedded cultural context if available
-    if (recipe?.culturalContext?.serving) {
-      return recipe.culturalContext.serving;
-    }
-    
-    if (ingredients.some(i => i.toLowerCase().includes('rice') || i.toLowerCase().includes('biryani'))) {
-      return 'Traditionally served on banana leaves or large brass platters (thali), shared family-style with various accompaniments like raita, pickles, and papadums. Everyone gathers around to eat together.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('pizza'))) {
-      return 'In Italy, traditionally eaten with fork and knife, never cut into slices. Served immediately from the wood-fired oven while the cheese is still bubbling. Each person gets their own individual pizza.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('tofu') || i.toLowerCase().includes('teriyaki'))) {
-      return 'Traditionally served family-style with steamed rice and 2-3 other dishes. Everyone shares from the center using chopsticks, emphasizing community and togetherness.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('quinoa') || i.toLowerCase().includes('salad'))) {
-      return 'Served at room temperature or chilled, often as a complete meal or sophisticated side dish at gatherings and celebrations';
-    }
-    return 'Best enjoyed fresh and warm, shared with family and friends as part of a complete meal, following traditional hospitality customs';
-  };
-
-  const getCulturalTips = (ingredients, recipe) => {
-    // Use embedded cultural context if available
-    if (recipe?.culturalContext?.tips) {
-      return recipe.culturalContext.tips;
-    }
-    
-    if (ingredients.some(i => i.toLowerCase().includes('paneer') || i.toLowerCase().includes('biryani'))) {
-      return 'Master the "dum" cooking method - slow cooking in a sealed pot. Soak saffron in warm milk for at least 30 minutes. Never stir during cooking. Traditional cooks layer carefully and cook by sound and aroma.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('chickpeas'))) {
-      return 'Soak chickpeas overnight and cook them slowly for best texture. Add a tea bag while boiling for deeper color - an old Punjabi trick. The key is building layers of flavor with proper tempering (tadka).';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('tofu'))) {
-      return 'Press tofu for 30 minutes to remove moisture for maximum crispiness. Heat the wok until smoking before adding ingredients - this creates "wok hei" (breath of the wok), essential for authentic flavor.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('pizza'))) {
-      return 'Use San Marzano tomatoes and buffalo mozzarella for authenticity. Stretch dough by hand, never roll, to maintain air bubbles. Wood-fired ovens reach 900°F - home ovens should be as hot as possible.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('rice'))) {
-      return 'Traditional cooks test rice doneness by pressing a grain between fingers. Soaking rice for 30 minutes before cooking is an ancient practice. Each grain should be separate, not mushy.';
-    }
-    if (ingredients.some(i => i.toLowerCase().includes('quinoa'))) {
-      return 'Always rinse quinoa to remove the bitter saponin coating. Toast quinoa in a dry pan for 2-3 minutes before cooking for nuttier flavor. Ancient Andean cooks would ceremonially offer the first handful to Pachamama (Mother Earth).';
-    }
-    return 'Traditional techniques often involve patience and attention to detail. Take time to build flavors layer by layer, respecting the wisdom of generations of cooks who perfected these methods.';
-  };
-
-  // Hugging Face Analysis (Backup - Multiple Reliable Models) - AI Generated Cultural Info
-  const performHuggingFaceAnalysis = async (recipe, ingredients, apiKey) => {
-    const reliableModels = [
-      'google/flan-t5-base',           // Google's T5 - very reliable
-      'facebook/blenderbot-400M-distill', // Facebook conversational AI
-      'microsoft/DialoGPT-small',      // Smaller, more stable
-      'huggingface/CodeBERTa-small-v1' // Alternative
-    ];
-
-    for (const model of reliableModels) {
-      try {
-        console.log(`🔄 Trying ${model.split('/')[1]}...`);
-        
-        // Enhanced prompt for cultural information and cooking instructions
-        const culturalPrompt = `Recipe: ${recipe.name}. Ingredients: ${ingredients.slice(0, 5).join(', ')}. 
-        
-        Provide detailed analysis including:
-        - Step-by-step cooking instructions (numbered 1, 2, 3...)
-        - Preparation time in minutes
-        - Calories per serving  
-        - Country/region of origin
-        - Brief history and cultural significance
-        - Traditional serving method
-        - Authentic cooking tips
-
-        Please provide detailed cooking steps with specific techniques and timing.`;
-        
-        const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            inputs: culturalPrompt,
-            parameters: {
-              max_new_tokens: 300, // More tokens for detailed instructions
-              temperature: 0.4,    // Balanced for detailed but accurate info
-              do_sample: true
-            },
-            options: {
-              wait_for_model: true
-            }
-          })
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          console.log(`✅ ${model.split('/')[1]} responded:`, result);
-          
-          // Parse HF response and extract cultural information
-          const enhancedResults = enhanceWithHFResponse(recipe, ingredients, result);
-          return { success: true, data: enhancedResults };
-        } else {
-          console.log(`❌ ${model.split('/')[1]} failed: ${response.status}`);
-          continue;
-        }
-      } catch (error) {
-        console.log(`❌ ${model.split('/')[1]} error:`, error.message);
-        continue;
-      }
-    }
-
-    return { success: false };
-  };
-
-  // Enhanced cooking instructions parsing - NO FALLBACK TO ORIGINAL STEPS
-  const enhanceWithHFResponse = (recipe, ingredients, hfResult) => {
-    try {
-      // Use AI response to get cultural information and cooking instructions
-      let aiText = '';
-      if (Array.isArray(hfResult) && hfResult[0]) {
-        aiText = hfResult[0].generated_text || hfResult[0].summary_text || '';
-      } else if (hfResult.generated_text) {
-        aiText = hfResult.generated_text;
-      }
-
-      console.log('🤖 Processing HF cultural response:', aiText);
-
-      // Extract cooking instructions from HF response
-      const instructionLines = aiText.split('\n').filter(line => {
-        const cleanLine = line.trim();
-        return cleanLine.length > 15 && 
-               (cleanLine.match(/^\d+\./) || 
-                cleanLine.toLowerCase().includes('cook') ||
-                cleanLine.toLowerCase().includes('heat') ||
-                cleanLine.toLowerCase().includes('add') ||
-                cleanLine.toLowerCase().includes('mix') ||
-                cleanLine.toLowerCase().includes('stir') ||
-                cleanLine.toLowerCase().includes('bake') ||
-                cleanLine.toLowerCase().includes('fry'));
-      });
-
-      const aiInstructions = instructionLines.length > 0 ? instructionLines.slice(0, 6) : null;
-      console.log('🤖 HF extracted instructions:', aiInstructions);
-
-      // Extract any numbers from AI response to enhance estimates
-      const numbers = aiText.match(/\d+/g) || [];
-      
-      const baseResults = {
-        prepTime: estimatePrepTime(ingredients.length),
-        nutrition: estimateNutrition(recipe.name, ingredients),
-        alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
-        aiInstructions: aiInstructions, // Include AI instructions from HF - NO FALLBACK
-        culturalInfo: extractCulturalInfoFromAI(aiText, recipe.name)
-      };
-
-      // AI-enhance the nutritional estimates
-      if (numbers.length > 0) {
-        const validTimes = numbers.filter(n => parseInt(n) >= 15 && parseInt(n) <= 120);
-        if (validTimes.length > 0) {
-          baseResults.prepTime = parseInt(validTimes[0]);
-        }
-
-        const validCalories = numbers.filter(n => parseInt(n) >= 150 && parseInt(n) <= 600);
-        if (validCalories.length > 0) {
-          baseResults.nutrition.calories = parseInt(validCalories[0]);
-          baseResults.nutrition.protein = Math.round(baseResults.nutrition.calories / 20);
-          baseResults.nutrition.carbs = Math.round(baseResults.nutrition.calories / 12);
-          baseResults.nutrition.fat = Math.round(baseResults.nutrition.calories / 50);
-        }
-      }
-
-      return baseResults;
-    } catch (error) {
-      console.error('Error enhancing with HF:', error);
-      return {
-        prepTime: estimatePrepTime(ingredients.length),
-        nutrition: estimateNutrition(recipe.name, ingredients),
-        alternateIngredients: generateAlternatives(ingredients.slice(0, 3)),
-        aiInstructions: null, // NO STATIC FALLBACK EVER
-        culturalInfo: null
-      };
-    }
-  };
-
-  // Extract Cultural Information from AI Text Response
-  const extractCulturalInfoFromAI = (aiText, recipeName) => {
-    if (!aiText || aiText.length < 50) return null;
-
-    try {
-      const text = aiText.toLowerCase();
-      
-      // Try to extract cultural information from AI response
-      let origin = 'Origin not determined by AI';
-      let history = 'Historical information not available';
-      let significance = 'Cultural significance not available';
-      let season = 'Seasonal information not available';
-      let serving = 'Traditional serving information not available';
-      let tips = 'Cultural cooking tips not available';
-
-      // Extract origin information
-      const originKeywords = ['origin', 'from', 'originated', 'country', 'region', 'culture'];
-      const countryNames = ['india', 'china', 'italy', 'japan', 'greece', 'mexico', 'france', 'thailand', 'peru', 'mediterranean'];
-      
-      for (const country of countryNames) {
-        if (text.includes(country)) {
-          origin = `${country.charAt(0).toUpperCase() + country.slice(1)} (identified by AI)`;
-          break;
-        }
-      }
-
-      // Extract historical information
-      if (text.includes('history') || text.includes('ancient') || text.includes('traditional') || text.includes('century')) {
-        const sentences = aiText.split(/[.!?]+/);
-        const historySentence = sentences.find(s => 
-          s.toLowerCase().includes('history') || 
-          s.toLowerCase().includes('ancient') || 
-          s.toLowerCase().includes('traditional') ||
-          s.toLowerCase().includes('century')
-        );
-        if (historySentence) {
-          history = historySentence.trim() + ' (AI generated)';
-        }
-      }
-
-      // Extract cultural significance
-      if (text.includes('cultural') || text.includes('tradition') || text.includes('celebration') || text.includes('festival')) {
-        const sentences = aiText.split(/[.!?]+/);
-        const culturalSentence = sentences.find(s => 
-          s.toLowerCase().includes('cultural') || 
-          s.toLowerCase().includes('tradition') || 
-          s.toLowerCase().includes('celebration')
-        );
-        if (culturalSentence) {
-          significance = culturalSentence.trim() + ' (AI generated)';
-        }
-      }
-
-      // Extract serving information
-      if (text.includes('served') || text.includes('serving') || text.includes('eaten')) {
-        const sentences = aiText.split(/[.!?]+/);
-        const servingSentence = sentences.find(s => 
-          s.toLowerCase().includes('served') || 
-          s.toLowerCase().includes('serving') || 
-          s.toLowerCase().includes('eaten')
-        );
-        if (servingSentence) {
-          serving = servingSentence.trim() + ' (AI generated)';
-        }
-      }
-
-      // Extract cooking tips
-      if (text.includes('tip') || text.includes('cook') || text.includes('prepare') || text.includes('technique')) {
-        const sentences = aiText.split(/[.!?]+/);
-        const tipSentence = sentences.find(s => 
-          s.toLowerCase().includes('tip') || 
-          s.toLowerCase().includes('cook') || 
-          s.toLowerCase().includes('technique')
-        );
-        if (tipSentence) {
-          tips = tipSentence.trim() + ' (AI generated)';
-        }
-      }
-
-      return {
-        origin,
-        history,
-        significance,
-        season,
-        serving,
-        tips
-      };
-    } catch (error) {
-      console.error('Error extracting cultural info from AI:', error);
+      console.error('AI generation error:', error);
+      setApiKeyError(true);
       return null;
     }
   };
 
-  // Helper function to estimate prep time
-  const estimatePrepTime = (ingredientCount) => {
-    if (ingredientCount <= 5) return 25;
-    if (ingredientCount <= 10) return 45;
-    if (ingredientCount <= 15) return 60;
-    return 75;
+  // Parse AI Response based on pattern type
+  const parseAIResponse = (aiText, patternType) => {
+    try {
+      if (patternType === 'direct') {
+        // Parse complete recipe
+        const recipe = parseCompleteRecipe(aiText);
+        return { type: 'recipe', data: recipe };
+      } else {
+        // Parse recipe suggestions
+        const suggestions = parseRecipeSuggestions(aiText, patternType);
+        return { type: 'suggestions', data: suggestions };
+      }
+    } catch (error) {
+      console.error('Error parsing AI response:', error);
+      return null;
+    }
   };
 
-  // Helper function to estimate nutrition
-  const estimateNutrition = (recipeName, ingredients) => {
-    const name = recipeName.toLowerCase();
-    let baseCalories = 200;
+  // Parse complete recipe from AI
+  const parseCompleteRecipe = (aiText) => {
+    const nameMatch = aiText.match(/RECIPE_NAME:\s*([^\n\r]+)/i);
+    const descMatch = aiText.match(/DESCRIPTION:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z_]+:|$)/i);
+    const prepTimeMatch = aiText.match(/PREP_TIME:\s*(\d+)/i);
+    const servingsMatch = aiText.match(/SERVINGS:\s*(\d+)/i);
     
-    // Adjust based on recipe type
-    if (name.includes('curry') || name.includes('rice') || name.includes('biryani')) baseCalories = 300;
-    if (name.includes('soup') || name.includes('salad')) baseCalories = 150;
-    if (name.includes('pasta') || name.includes('noodle')) baseCalories = 350;
-    if (name.includes('bread') || name.includes('pizza')) baseCalories = 280;
-    if (name.includes('chicken') || name.includes('meat')) baseCalories = 320;
+    // Parse ingredients
+    const ingredientsSection = aiText.match(/INGREDIENTS:\s*([\s\S]*?)(?=\n[A-Z_]+:|$)/i);
+    let ingredients = [];
+    if (ingredientsSection) {
+      ingredients = ingredientsSection[1]
+        .split('\n')
+        .filter(line => line.trim().startsWith('-'))
+        .map(line => line.replace(/^-\s*/, '').trim())
+        .filter(ingredient => ingredient.length > 0);
+    }
+    
+    // Parse instructions
+    const instructionsSection = aiText.match(/INSTRUCTIONS:\s*([\s\S]*?)(?=\n[A-Z_]+:|$)/i);
+    let instructions = [];
+    if (instructionsSection) {
+      instructions = instructionsSection[1]
+        .split('\n')
+        .filter(line => /^\d+\./.test(line.trim()))
+        .map(line => line.replace(/^\d+\.\s*/, '').trim())
+        .filter(instruction => instruction.length > 0);
+    }
+    
+    // Parse nutrition
+    const caloriesMatch = aiText.match(/Calories:\s*(\d+)/i);
+    const proteinMatch = aiText.match(/Protein:\s*(\d+)/i);
+    const carbsMatch = aiText.match(/Carbs:\s*(\d+)/i);
+    const fatMatch = aiText.match(/Fat:\s*(\d+)/i);
+    
+    // Parse cultural info
+    const originMatch = aiText.match(/Origin:\s*([^\n\r]+)/i);
+    const historyMatch = aiText.match(/History:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z_]+:|$)/i);
+    const significanceMatch = aiText.match(/Significance:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z_]+:|$)/i);
+    const servingMatch = aiText.match(/Traditional_Serving:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z_]+:|$)/i);
+    const tipsMatch = aiText.match(/Cooking_Tips:\s*([^\n\r]+(?:\n[^\n\r]+)*?)(?=\n[A-Z_]+:|$)/i);
+    
+    // Parse alternatives
+    const alt1Match = aiText.match(/Alt1:\s*([^\n\r]+)/i);
+    const alt2Match = aiText.match(/Alt2:\s*([^\n\r]+)/i);
+    const alt3Match = aiText.match(/Alt3:\s*([^\n\r]+)/i);
     
     return {
-      calories: baseCalories + ingredients.length * 10,
-      protein: Math.floor(baseCalories / 25) + 5,
-      carbs: Math.floor(baseCalories / 15) + 10,
-      fat: Math.floor(baseCalories / 50) + 3
+      name: nameMatch ? nameMatch[1].trim() : 'Delicious Recipe',
+      description: descMatch ? descMatch[1].trim() : 'A wonderful dish to try!',
+      prepTime: prepTimeMatch ? parseInt(prepTimeMatch[1]) : 45,
+      servings: servingsMatch ? parseInt(servingsMatch[1]) : 4,
+      ingredients: ingredients.length > 0 ? ingredients : ['Various ingredients as needed'],
+      instructions: instructions.length > 0 ? instructions : ['Follow traditional cooking methods'],
+      nutrition: {
+        calories: caloriesMatch ? parseInt(caloriesMatch[1]) : 300,
+        protein: proteinMatch ? parseInt(proteinMatch[1]) : 15,
+        carbs: carbsMatch ? parseInt(carbsMatch[1]) : 40,
+        fat: fatMatch ? parseInt(fatMatch[1]) : 12
+      },
+      culturalInfo: (originMatch || historyMatch || significanceMatch || servingMatch || tipsMatch) ? {
+        origin: originMatch ? originMatch[1].trim() : null,
+        history: historyMatch ? historyMatch[1].trim() : null,
+        significance: significanceMatch ? significanceMatch[1].trim() : null,
+        serving: servingMatch ? servingMatch[1].trim() : null,
+        tips: tipsMatch ? tipsMatch[1].trim() : null
+      } : null,
+      alternatives: [
+        {
+          original: ingredients[0] || 'main ingredient',
+          substitute: alt1Match ? alt1Match[1].split('(')[0].trim() : 'similar ingredient',
+          ratio: '1:1'
+        },
+        {
+          original: ingredients[1] || 'second ingredient',
+          substitute: alt2Match ? alt2Match[1].split('(')[0].trim() : 'similar ingredient',
+          ratio: '1:1'
+        },
+        {
+          original: ingredients[2] || 'third ingredient',
+          substitute: alt3Match ? alt3Match[1].split('(')[0].trim() : 'similar ingredient',
+          ratio: '1:1'
+        }
+      ],
+      aiGenerated: true
     };
   };
 
-  // Helper function to generate ingredient alternatives
-  const generateAlternatives = (mainIngredients) => {
-    const alternatives = {
-      'oil': { substitute: 'butter or avocado oil', ratio: '1:1' },
-      'onion': { substitute: 'shallots or leeks', ratio: '1:1' },
-      'garlic': { substitute: 'garlic powder', ratio: '1 clove:1/8 tsp' },
-      'tomato': { substitute: 'tomato paste + water', ratio: '1:3' },
-      'chickpeas': { substitute: 'cannellini beans', ratio: '1:1' },
-      'lentils': { substitute: 'split peas', ratio: '1:1' },
-      'quinoa': { substitute: 'brown rice', ratio: '1:1' },
-      'tofu': { substitute: 'tempeh', ratio: '1:1' },
-      'coconut milk': { substitute: 'cashew milk', ratio: '1:1' },
-      'ginger': { substitute: 'ground ginger', ratio: '1 inch:1/4 tsp' },
-      'paneer': { substitute: 'halloumi cheese', ratio: '1:1' },
-      'chicken': { substitute: 'tofu or seitan', ratio: '1:1' },
-      'mozzarella': { substitute: 'provolone cheese', ratio: '1:1' },
-      'soy sauce': { substitute: 'tamari or coconut aminos', ratio: '1:1' }
-    };
-
-    return mainIngredients.map(ingredient => {
-      const cleanIngredient = ingredient.toLowerCase().replace(/[0-9\s]+/g, '').trim();
-      const found = Object.keys(alternatives).find(key => cleanIngredient.includes(key));
+  // Parse recipe suggestions from AI
+  const parseRecipeSuggestions = (aiText, patternType) => {
+    const suggestions = [];
+    
+    for (let i = 1; i <= 4; i++) {
+      let nameMatch, descMatch, extraMatch;
       
-      return {
-        original: ingredient,
-        substitute: found ? alternatives[found].substitute : 'similar ingredient',
-        ratio: found ? alternatives[found].ratio : '1:1'
+      if (patternType === 'discovery') {
+        nameMatch = aiText.match(new RegExp(`DISH_${i}:[\\s\\S]*?Name:\\s*([^\\n\\r]+)`, 'i'));
+        descMatch = aiText.match(new RegExp(`DISH_${i}:[\\s\\S]*?Description:\\s*([^\\n\\r]+)`, 'i'));
+        extraMatch = aiText.match(new RegExp(`DISH_${i}:[\\s\\S]*?Appeal:\\s*([^\\n\\r]+)`, 'i'));
+      } else if (patternType === 'ingredients') {
+        nameMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Name:\\s*([^\\n\\r]+)`, 'i'));
+        descMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Description:\\s*([^\\n\\r]+)`, 'i'));
+        extraMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Additional_Needed:\\s*([^\\n\\r]+)`, 'i'));
+      } else if (patternType === 'context') {
+        nameMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Name:\\s*([^\\n\\r]+)`, 'i'));
+        descMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Description:\\s*([^\\n\\r]+)`, 'i'));
+        extraMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Context_Benefits:\\s*([^\\n\\r]+)`, 'i'));
+      }
+      
+      if (nameMatch && descMatch) {
+        suggestions.push({
+          id: i,
+          name: nameMatch[1].trim(),
+          description: descMatch[1].trim(),
+          extra: extraMatch ? extraMatch[1].trim() : '',
+          patternType
+        });
+      }
+    }
+    
+    return suggestions;
+  };
+
+  // Handle search with pattern recognition
+  const handleSearch = async (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowResults(false);
+      setQueryPattern(null);
+      return;
+    }
+
+    setLoading(true);
+    setShowResults(true);
+    setApiKeyError(false);
+
+    const pattern = detectQueryPattern(query);
+    setQueryPattern(pattern);
+    
+    console.log('🔍 Detected pattern:', pattern);
+
+    const aiResponse = await generateAIResponse(pattern, query);
+    
+    if (aiResponse) {
+      if (aiResponse.type === 'recipe') {
+        // Direct recipe - show immediately
+        setSelectedRecipe(aiResponse.data);
+        setAiRecommendations({
+          prepTime: aiResponse.data.prepTime,
+          nutrition: aiResponse.data.nutrition,
+          alternateIngredients: aiResponse.data.alternatives,
+          culturalInfo: aiResponse.data.culturalInfo,
+          aiInstructions: aiResponse.data.instructions,
+          aiGenerated: true
+        });
+        setShowResults(false);
+      } else {
+        // Suggestions - show for selection
+        setSearchResults(aiResponse.data);
+      }
+    } else {
+      setSearchResults([]);
+    }
+    
+    setLoading(false);
+  };
+
+  // Handle recipe suggestion selection
+  const handleSuggestionSelect = async (suggestion) => {
+    setLoading(true);
+    setShowResults(false);
+    
+    // Generate full recipe for selected suggestion
+    const fullRecipeQuery = `Generate complete recipe for: ${suggestion.name}`;
+    const pattern = { type: 'direct', query: fullRecipeQuery };
+    
+    const aiResponse = await generateAIResponse(pattern, fullRecipeQuery);
+    
+    if (aiResponse && aiResponse.type === 'recipe') {
+      // Add context-specific enhancements based on original pattern
+      const enhancedRecipe = {
+        ...aiResponse.data,
+        contextualNotes: getContextualNotes(suggestion, queryPattern.type)
       };
-    });
+      
+      setSelectedRecipe(enhancedRecipe);
+      setAiRecommendations({
+        prepTime: enhancedRecipe.prepTime,
+        nutrition: enhancedRecipe.nutrition,
+        alternateIngredients: enhancedRecipe.alternatives,
+        culturalInfo: enhancedRecipe.culturalInfo,
+        aiInstructions: enhancedRecipe.instructions,
+        aiGenerated: true,
+        contextualNotes: enhancedRecipe.contextualNotes
+      });
+    }
+    
+    setLoading(false);
+  };
+
+  // Get contextual notes based on query pattern
+  const getContextualNotes = (suggestion, patternType) => {
+    switch (patternType) {
+      case 'discovery':
+        return {
+          title: "Perfect Pairing",
+          content: `This ${suggestion.name} ${suggestion.extra || 'complements your request beautifully'}.`,
+          icon: "🤝"
+        };
+      case 'ingredients':
+        return {
+          title: "Ingredient Optimization",
+          content: `Using your available ingredients optimally. ${suggestion.extra ? `You'll also need: ${suggestion.extra}` : ''}`,
+          icon: "🥘"
+        };
+      case 'context':
+        return {
+          title: "Context Benefits",
+          content: `${suggestion.extra || 'Perfect for your specific needs'}.`,
+          icon: "⭐"
+        };
+      default:
+        return null;
+    }
   };
 
   const resetToHome = () => {
-    console.log('🔍 DEBUG - Resetting to home');
     setSelectedRecipe(null);
     setAiRecommendations(null);
     setSearchQuery('');
     setSearchResults([]);
     setShowResults(false);
     setApiKeyError(false);
-    setLoading(false); // Make sure loading is also reset
-    setShowCulturalCards(false); // Reset cultural cards
+    setLoading(false);
+    setShowCulturalCards(false);
+    setQueryPattern(null);
   };
 
   return (
@@ -1552,7 +779,7 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
               </span>
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <Sparkles className="h-4 w-4" />
-                <span>AI-Powered Recipe Discovery</span>
+                <span>AI-Native Recipe Discovery</span>
               </div>
             </div>
           </div>
@@ -1575,79 +802,81 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
             <div className="flex items-start space-x-3">
               <AlertCircle className="h-6 w-6 text-amber-600 mt-0.5" />
               <div>
-                <h3 className="text-lg font-semibold text-amber-800 mb-2">Real AI Required - Setup Instructions</h3>
+                <h3 className="text-lg font-semibold text-amber-800 mb-2">🤖 AI Recipe Generation Requires Setup</h3>
                 <div className="text-amber-700 space-y-3">
                   <div className="bg-white/50 rounded-lg p-4">
-                    <h4 className="font-semibold text-amber-800 mb-2">🚀 Option 1: Google Gemini (Recommended - Most Reliable)</h4>
+                    <h4 className="font-semibold text-amber-800 mb-2">🚀 Google Gemini (Required for AI Recipes)</h4>
                     <ol className="list-decimal list-inside space-y-1 ml-2 text-sm">
                       <li>Go to <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Google AI Studio</a></li>
                       <li>Click "Create API Key" (free with generous limits)</li>
                       <li>Add <code className="bg-amber-100 px-2 py-1 rounded">VITE_GEMINI_API_KEY=your_key_here</code> to your .env file</li>
+                      <li>Restart the development server</li>
                     </ol>
                   </div>
                   
-                  <div className="bg-white/50 rounded-lg p-4">
-                    <h4 className="font-semibold text-amber-800 mb-2">🎨 Option 2: OpenAI DALL-E (For AI Images)</h4>
-                    <ol className="list-decimal list-inside space-y-1 ml-2 text-sm">
-                      <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">OpenAI API Keys</a></li>
-                      <li>Create API Key (pay-per-use, ~$0.04 per image)</li>
-                      <li>Add <code className="bg-amber-100 px-2 py-1 rounded">VITE_OPENAI_API_KEY=your_openai_key</code> to your .env file</li>
-                    </ol>
-                  </div>
-                  
-                  <div className="bg-white/50 rounded-lg p-4">
-                    <h4 className="font-semibold text-amber-800 mb-2">🔄 Option 3: Hugging Face (Backup for Analysis + Free Images)</h4>
-                    <ol className="list-decimal list-inside space-y-1 ml-2 text-sm">
-                      <li>Go to <a href="https://huggingface.co/join" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">huggingface.co</a> and create a free account</li>
-                      <li>Go to Settings → Access Tokens and create a new token</li>
-                      <li>Add <code className="bg-amber-100 px-2 py-1 rounded">VITE_HF_API_KEY=hf_your_token_here</code> to your .env file</li>
-                    </ol>
-                  </div>
-                  
-                  <p className="text-sm font-semibold">⚡ Restart the development server after adding API keys</p>
-                  <p className="text-xs">🎯 <strong>Recommended combo:</strong> Gemini (analysis) + OpenAI (images) for best results!</p>
+                  <p className="text-sm font-semibold">🎯 <strong>Features enabled with API:</strong></p>
+                  <ul className="text-xs space-y-1 ml-4">
+                    <li>• Complete recipe generation from any query</li>
+                    <li>• Smart pattern recognition (direct, discovery, ingredients, context)</li>
+                    <li>• Cultural heritage information</li>
+                    <li>• Ingredient alternatives and nutritional data</li>
+                    <li>• Context-specific cooking tips</li>
+                  </ul>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {recipesLoading ? (
-          <div className="text-center py-16">
-            <Sparkles className="h-12 w-12 text-indigo-600 animate-spin mx-auto mb-4" />
-            <p className="text-xl text-gray-600">Loading recipes...</p>
-            <p className="text-sm text-gray-500 mt-2">Checking recipedata.json format...</p>
-          </div>
-        ) : recipesError ? (
-          <div className="text-center py-16">
-            <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-2xl mx-auto">
-              <p className="text-red-600 text-lg">{recipesError}</p>
-              <p className="text-gray-600 mt-2">Using embedded recipes for demonstration.</p>
-            </div>
-          </div>
-        ) : recipes.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 max-w-2xl mx-auto">
-              <AlertCircle className="h-12 w-12 text-amber-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-amber-800 mb-2">No Recipes Found</h3>
-              <p className="text-amber-700">
-                The recipedata.json file was loaded but no valid recipes were found. 
-                Please check the console for the data structure details.
-              </p>
-              <p className="text-sm text-amber-600 mt-4">
-                Expected format: Array of objects with at least a 'name' field, or an object with 'recipes'/'data' array.
-              </p>
-            </div>
-          </div>
-        ) : !selectedRecipe ? (
+        {!selectedRecipe ? (
           <div className="center-container">
             <div className="text-center mb-12 w-full">
               <h1 className="text-6xl font-bold text-gray-800 mb-4">
                 What's Cooking?
               </h1>
               <p className="text-xl text-gray-600 mb-8">
-                Tell us what you want to eat, and we'll find the perfect recipe with AI-powered insights!
+                AI-powered recipe discovery! Tell me what you want and I'll create the perfect recipe with cultural insights.
               </p>
+              
+              {/* Smart Query Examples */}
+              <div className="mb-8 grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+                <div className="bg-white/60 rounded-xl p-4 text-left">
+                  <h3 className="font-semibold text-indigo-700 mb-2">🍽️ Direct Recipe</h3>
+                  <p className="text-sm text-gray-600 mb-2">Get instant complete recipes:</p>
+                  <div className="text-xs space-y-1">
+                    <div className="bg-gray-100 px-2 py-1 rounded">"I want to eat chicken tikka masala"</div>
+                    <div className="bg-gray-100 px-2 py-1 rounded">"Make me authentic pad thai"</div>
+                  </div>
+                </div>
+                
+                <div className="bg-white/60 rounded-xl p-4 text-left">
+                  <h3 className="font-semibold text-green-700 mb-2">🔍 Discovery</h3>
+                  <p className="text-sm text-gray-600 mb-2">Get suggestions to choose from:</p>
+                  <div className="text-xs space-y-1">
+                    <div className="bg-gray-100 px-2 py-1 rounded">"What's the best dish for naan bread?"</div>
+                    <div className="bg-gray-100 px-2 py-1 rounded">"What goes well with jasmine rice?"</div>
+                  </div>
+                </div>
+                
+                <div className="bg-white/60 rounded-xl p-4 text-left">
+                  <h3 className="font-semibold text-orange-700 mb-2">🥘 Ingredients</h3>
+                  <p className="text-sm text-gray-600 mb-2">Use what you have:</p>
+                  <div className="text-xs space-y-1">
+                    <div className="bg-gray-100 px-2 py-1 rounded">"I have chicken, onions, and rice"</div>
+                    <div className="bg-gray-100 px-2 py-1 rounded">"Recipe with tomatoes and basil"</div>
+                  </div>
+                </div>
+                
+                <div className="bg-white/60 rounded-xl p-4 text-left">
+                  <h3 className="font-semibold text-purple-700 mb-2">⚡ Context</h3>
+                  <p className="text-sm text-gray-600 mb-2">Perfect for your situation:</p>
+                  <div className="text-xs space-y-1">
+                    <div className="bg-gray-100 px-2 py-1 rounded">"Quick lunch for office"</div>
+                    <div className="bg-gray-100 px-2 py-1 rounded">"Healthy dinner for weight loss"</div>
+                  </div>
+                </div>
+              </div>
+              
               {/* Search Box */}
               <div className="relative max-w-2xl mx-auto">
                 <div className="relative">
@@ -1655,47 +884,88 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      handleSearch(e.target.value);
-                    }}
-                    placeholder="I want to eat paneer biryani..."
-                    className="w-full pl-12 pr-4 py-4 text-lg border-2 border-transparent rounded-full shadow-lg focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
+                    placeholder="Tell me what you want to cook..."
+                    className="w-full pl-12 pr-16 py-4 text-lg border-2 border-transparent rounded-full shadow-lg focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
+                    disabled={loading}
                   />
+                  <button
+                    onClick={() => handleSearch(searchQuery)}
+                    disabled={loading || !searchQuery.trim()}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-indigo-600 text-white p-2 rounded-full hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+                  >
+                    {loading ? <Loader className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
+                  </button>
                 </div>
-                {/* Search Results Dropdown */}
-                {showResults && searchResults.length > 0 && (
-                  <div className="absolute top-full mt-2 w-full bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-10">
-                    {searchResults.map((recipe, index) => (
-                      <div
-                        key={recipe.recipie_collection_idx || index}
-                        onClick={() => handleRecipeSelect(recipe)}
-                        className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
-                            <p className="text-sm text-gray-600 line-clamp-2">{recipe.descripition}</p>
-                            <div className="mt-2">
-                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                                {recipe.collection.includes('vegan') ? 'Vegan' : 
-                                 recipe.collection.includes('indian') ? 'Indian' :
-                                 recipe.collection.includes('italian') ? 'Italian' :
-                                 recipe.collection.includes('asian') ? 'Asian' : 'Healthy'} Recipe
-                              </span>
-                            </div>
-                          </div>
-                          <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg ml-4 flex items-center justify-center">
-                            <Utensils className="h-8 w-8 text-indigo-600" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                
+                {/* Query Pattern Indicator */}
+                {queryPattern && (
+                  <div className="mt-2 text-center">
+                    <span className="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full">
+                      🤖 Pattern: {queryPattern.type.charAt(0).toUpperCase() + queryPattern.type.slice(1)}
+                    </span>
                   </div>
                 )}
-                {showResults && searchResults.length === 0 && searchQuery.trim() && (
-                  <div className="absolute top-full mt-2 w-full bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-10">
-                    <p className="text-gray-600 text-center">No recipes found. Try different keywords!</p>
+                
+                {/* Loading State */}
+                {loading && (
+                  <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-center justify-center space-x-2">
+                      <Sparkles className="h-5 w-5 text-blue-600 animate-spin" />
+                      <span className="text-blue-800">AI is creating your recipe...</span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Search Results/Suggestions */}
+                {showResults && searchResults.length > 0 && !loading && (
+                  <div className="mt-4 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                    <div className="p-4 border-b border-gray-100">
+                      <h3 className="font-semibold text-gray-800">
+                        {queryPattern?.type === 'discovery' && '🔍 Recommended Dishes'}
+                        {queryPattern?.type === 'ingredients' && '🥘 Recipes Using Your Ingredients'}
+                        {queryPattern?.type === 'context' && '⭐ Perfect for Your Needs'}
+                        {(!queryPattern || queryPattern?.type === 'direct') && '🍽️ Recipe Suggestions'}
+                      </h3>
+                      <p className="text-sm text-gray-600">Choose one to get the complete recipe with cultural insights</p>
+                    </div>
+                    
+                    <div className="max-h-96 overflow-y-auto">
+                      {searchResults.map((suggestion, index) => (
+                        <div
+                          key={suggestion.id || index}
+                          onClick={() => handleSuggestionSelect(suggestion)}
+                          className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-800 mb-1">{suggestion.name}</h4>
+                              <p className="text-sm text-gray-600 mb-2">{suggestion.description}</p>
+                              {suggestion.extra && (
+                                <div className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full inline-block">
+                                  {queryPattern?.type === 'discovery' && `✨ ${suggestion.extra}`}
+                                  {queryPattern?.type === 'ingredients' && `+ ${suggestion.extra}`}
+                                  {queryPattern?.type === 'context' && `⚡ ${suggestion.extra}`}
+                                </div>
+                              )}
+                            </div>
+                            <div className="ml-4 flex items-center justify-center w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg">
+                              <ChefHat className="h-6 w-6 text-indigo-600" />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {showResults && searchResults.length === 0 && !loading && searchQuery.trim() && (
+                  <div className="mt-4 bg-white rounded-2xl shadow-xl border border-gray-100 p-6 text-center">
+                    <div className="text-gray-600">
+                      <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p>Unable to generate recipes. Please check your AI configuration.</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1714,48 +984,57 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
 
             {/* Recipe Header */}
             <div className="bg-white/80 backdrop-blur-md rounded-2xl p-8 shadow-lg">
-              <h1 className="text-4xl font-bold text-gray-800 mb-4">{selectedRecipe.name}</h1>
-              <p className="text-lg text-gray-600 mb-6">{selectedRecipe.descripition}</p>
-              
-              {/* Recipe Image - Original or AI-generated */}
-              {selectedRecipe.image ? (
-                <img 
-                  src={selectedRecipe.image} 
-                  alt={selectedRecipe.name}
-                  className="w-full h-64 object-cover rounded-xl mb-6"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              ) : aiRecommendations?.aiImage ? (
-                <div className="relative">
-                  <img 
-                    src={aiRecommendations.aiImage} 
-                    alt={`AI-generated ${selectedRecipe.name}`}
-                    className="w-full h-64 object-cover rounded-xl mb-6"
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
-                  <div className="absolute top-2 right-2 bg-purple-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                    🤖 AI Generated
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h1 className="text-4xl font-bold text-gray-800 mb-2">{selectedRecipe.name}</h1>
+                  <p className="text-lg text-gray-600 mb-4">{selectedRecipe.description}</p>
+                  
+                  {/* Recipe Meta Info */}
+                  <div className="flex items-center space-x-6 text-sm text-gray-600">
+                    <div className="flex items-center space-x-1">
+                      <Clock className="h-4 w-4" />
+                      <span>{selectedRecipe.prepTime} min</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Utensils className="h-4 w-4" />
+                      <span>{selectedRecipe.servings} servings</span>
+                    </div>
+                    <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
+                      🤖 AI Generated
+                    </span>
                   </div>
                 </div>
-              ) : (
-                <div className="w-full h-64 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl mb-6 flex items-center justify-center">
-                  <div className="text-center">
-                    <ChefHat className="h-20 w-20 text-indigo-600 mx-auto mb-4" />
-                    <p className="text-indigo-800 font-semibold">{selectedRecipe.name}</p>
-                    {loading && <p className="text-xs text-indigo-600 mt-2">🎨 Generating AI image...</p>}
+              </div>
+              
+              {/* Contextual Notes */}
+              {aiRecommendations?.contextualNotes && (
+                <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <span className="text-lg">{aiRecommendations.contextualNotes.icon}</span>
+                    <h3 className="font-semibold text-blue-800">{aiRecommendations.contextualNotes.title}</h3>
                   </div>
+                  <p className="text-blue-700 text-sm">{aiRecommendations.contextualNotes.content}</p>
                 </div>
               )}
               
-              {/* Complete Ingredients List */}
+              {/* Recipe Image Placeholder */}
+              <div className="w-full h-64 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl mb-6 flex items-center justify-center">
+                <div className="text-center">
+                  <ChefHat className="h-20 w-20 text-indigo-600 mx-auto mb-4" />
+                  <p className="text-indigo-800 font-semibold">{selectedRecipe.name}</p>
+                  <p className="text-xs text-indigo-600 mt-2">🤖 AI-Generated Recipe</p>
+                </div>
+              </div>
+              
+              {/* Ingredients List */}
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                   <Utensils className="h-5 w-5 text-indigo-600 mr-2" />
-                  Ingredients ({parseIngredients(selectedRecipe.ingredients).length} items)
+                  Ingredients ({selectedRecipe.ingredients.length} items)
                 </h3>
                 <div className="bg-gray-50 rounded-xl p-4">
                   <div className="grid md:grid-cols-2 gap-2">
-                    {parseIngredients(selectedRecipe.ingredients).map((ingredient, index) => (
+                    {selectedRecipe.ingredients.map((ingredient, index) => (
                       <div
                         key={index}
                         className="flex items-start space-x-2 py-2 border-b border-gray-200 last:border-b-0"
@@ -1772,89 +1051,40 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
                 </div>
               </div>
 
-              {/* Recipe Steps */}
+              {/* AI-Generated Instructions */}
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                   <Clock className="h-5 w-5 text-green-600 mr-2" />
                   Instructions
+                  <span className="ml-2 text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">🤖 AI Generated</span>
                 </h3>
                 
                 <div className="bg-green-50 rounded-xl p-4">
                   <div className="space-y-3">
-                    {(() => {
-                      // Use AI-generated instructions if available, otherwise fall back to original
-                      if (aiRecommendations?.aiInstructions && aiRecommendations.aiInstructions.length > 0) {
-                        console.log('🤖 Displaying AI-generated instructions:', aiRecommendations.aiInstructions);
-                        return aiRecommendations.aiInstructions.map((step, index) => (
-                          <div key={index} className="flex items-start space-x-3">
-                            <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold min-w-[24px]">
-                              {index + 1}
-                            </span>
-                            <p className="text-gray-700 text-sm flex-1 leading-relaxed">
-                              {step}
-                            </p>
-                          </div>
-                        ));
-                      }
-                      
-                      try {
-                        // Safe parsing of original steps
-                        const stepsStr = selectedRecipe.steps.replace(/^\[|\]$/g, '');
-                        const steps = stepsStr.split('\', \'').map(step => 
-                          step.replace(/^\'|\'$/g, '').replace(/^\"|\"$/g, '')
-                        );
-                        return steps.map((step, index) => (
-                          <div key={index} className="flex items-start space-x-3">
-                            <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold min-w-[24px]">
-                              {index + 1}
-                            </span>
-                            <p className="text-gray-700 text-sm flex-1 leading-relaxed">
-                              {step}
-                            </p>
-                          </div>
-                        ));
-                      } catch (error) {
-                        return (
-                          <p className="text-gray-600 text-sm">
-                            Cooking instructions available - AI will enhance these when configured.
-                          </p>
-                        );
-                      }
-                    })()}
+                    {selectedRecipe.instructions.map((step, index) => (
+                      <div key={index} className="flex items-start space-x-3">
+                        <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold min-w-[24px]">
+                          {index + 1}
+                        </span>
+                        <p className="text-gray-700 text-sm flex-1 leading-relaxed">
+                          {step}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                
-                {/* Loading message under instructions */}
-                {loading && (
-                  <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
-                    <div className="flex items-center space-x-2">
-                      <Sparkles className="h-5 w-5 text-blue-600 animate-spin" />
-                      <span className="text-blue-800">AI is analyzing your recipe...</span>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Message when no AI instructions are available */}
-                {!loading && (!aiRecommendations?.aiInstructions || aiRecommendations?.aiInstructions?.length === 0) && (
-                  <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
-                    <div className="flex items-center space-x-2">
-                      <Clock className="h-5 w-5 text-amber-600" />
-                      <span className="text-amber-800">💡 Configure AI to get detailed, traditional cooking instructions with techniques and timing</span>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
             {/* AI Recommendations */}
-            {!loading && aiRecommendations ? (
+            {aiRecommendations && (
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Preparation Time & Nutrition */}
                 <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg">
                   <div className="flex items-center justify-center space-x-2 mb-4">
                     <Clock className="h-5 w-5 text-indigo-600" />
                     <h3 className="text-xl font-semibold">Preparation Time</h3>
-                    {!aiRecommendations.aiGenerated && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Smart Estimate</span>}
+                    <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">AI Calculated</span>
                   </div>
                   <div className="text-center">
                     <p className="text-3xl font-bold text-indigo-600">{aiRecommendations.prepTime} min</p>
@@ -1865,7 +1095,7 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
                   <div className="flex items-center justify-center space-x-2 mb-4">
                     <Apple className="h-5 w-5 text-green-600" />
                     <h3 className="text-xl font-semibold">Nutritional Value</h3>
-                    {!aiRecommendations.aiGenerated && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Smart Estimate</span>}
+                    <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">AI Calculated</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm max-w-xs mx-auto">
                     <div className="text-center">Calories: <span className="font-semibold block">{aiRecommendations.nutrition.calories}</span></div>
@@ -1880,6 +1110,7 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
                   <div className="flex items-center space-x-2 mb-4">
                     <Utensils className="h-5 w-5 text-orange-600" />
                     <h3 className="text-xl font-semibold">Alternate Ingredients</h3>
+                    <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">AI Generated</span>
                   </div>
                   <div className="grid md:grid-cols-3 gap-4">
                     {aiRecommendations.alternateIngredients.map((alt, index) => (
@@ -1892,7 +1123,7 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
                   </div>
                 </div>
 
-                {/* Cultural & Historical Information - Only show if AI provided data */}
+                {/* Cultural & Historical Information */}
                 {aiRecommendations.culturalInfo && (
                   <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg md:col-span-2">
                     <div className="flex items-center justify-between mb-4">
@@ -1902,7 +1133,6 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
                         <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">🤖 AI Generated</span>
                       </div>
                       
-                      {/* Cultural Story Cards Button */}
                       <button
                         onClick={() => setShowCulturalCards(true)}
                         className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
@@ -1912,69 +1142,59 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
                     </div>
                     
                     <div className="grid md:grid-cols-2 gap-4">
-                      {/* Origin & History */}
                       <div className="space-y-4">
-                        <div className="bg-purple-50 rounded-lg p-4">
-                          <h4 className="font-semibold text-purple-800 mb-2 flex items-center">
-                            🌍 Origin
-                          </h4>
-                          <p className="text-purple-700 text-sm">{aiRecommendations.culturalInfo.origin}</p>
-                        </div>
+                        {aiRecommendations.culturalInfo.origin && (
+                          <div className="bg-purple-50 rounded-lg p-4">
+                            <h4 className="font-semibold text-purple-800 mb-2 flex items-center">
+                              🌍 Origin
+                            </h4>
+                            <p className="text-purple-700 text-sm">{aiRecommendations.culturalInfo.origin}</p>
+                          </div>
+                        )}
                         
-                        <div className="bg-blue-50 rounded-lg p-4">
-                          <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
-                            📜 History
-                          </h4>
-                          <p className="text-blue-700 text-sm">{aiRecommendations.culturalInfo.history}</p>
-                        </div>
+                        {aiRecommendations.culturalInfo.history && (
+                          <div className="bg-blue-50 rounded-lg p-4">
+                            <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
+                              📜 History
+                            </h4>
+                            <p className="text-blue-700 text-sm">{aiRecommendations.culturalInfo.history}</p>
+                          </div>
+                        )}
                         
-                        <div className="bg-amber-50 rounded-lg p-4">
-                          <h4 className="font-semibold text-amber-800 mb-2 flex items-center">
-                            🎭 Cultural Significance
-                          </h4>
-                          <p className="text-amber-700 text-sm">{aiRecommendations.culturalInfo.significance}</p>
-                        </div>
+                        {aiRecommendations.culturalInfo.significance && (
+                          <div className="bg-amber-50 rounded-lg p-4">
+                            <h4 className="font-semibold text-amber-800 mb-2 flex items-center">
+                              🎭 Cultural Significance
+                            </h4>
+                            <p className="text-amber-700 text-sm">{aiRecommendations.culturalInfo.significance}</p>
+                          </div>
+                        )}
                       </div>
                       
-                      {/* Traditional Context */}
                       <div className="space-y-4">
-                        <div className="bg-green-50 rounded-lg p-4">
-                          <h4 className="font-semibold text-green-800 mb-2 flex items-center">
-                            🌸 Traditional Season
-                          </h4>
-                          <p className="text-green-700 text-sm">{aiRecommendations.culturalInfo.season}</p>
-                        </div>
+                        {aiRecommendations.culturalInfo.serving && (
+                          <div className="bg-rose-50 rounded-lg p-4">
+                            <h4 className="font-semibold text-rose-800 mb-2 flex items-center">
+                              🍽️ Traditional Serving
+                            </h4>
+                            <p className="text-rose-700 text-sm">{aiRecommendations.culturalInfo.serving}</p>
+                          </div>
+                        )}
                         
-                        <div className="bg-rose-50 rounded-lg p-4">
-                          <h4 className="font-semibold text-rose-800 mb-2 flex items-center">
-                            🍽️ Traditional Serving
-                          </h4>
-                          <p className="text-rose-700 text-sm">{aiRecommendations.culturalInfo.serving}</p>
-                        </div>
-                        
-                        <div className="bg-indigo-50 rounded-lg p-4">
-                          <h4 className="font-semibold text-indigo-800 mb-2 flex items-center">
-                            💡 Cultural Cooking Tips
-                          </h4>
-                          <p className="text-indigo-700 text-sm">{aiRecommendations.culturalInfo.tips}</p>
-                        </div>
+                        {aiRecommendations.culturalInfo.tips && (
+                          <div className="bg-indigo-50 rounded-lg p-4">
+                            <h4 className="font-semibold text-indigo-800 mb-2 flex items-center">
+                              💡 Cultural Cooking Tips
+                            </h4>
+                            <p className="text-indigo-700 text-sm">{aiRecommendations.culturalInfo.tips}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
                 )}
-
-                {/* Message when no cultural info available */}
-                {!aiRecommendations.culturalInfo ? (
-                  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 md:col-span-2">
-                    <div className="flex items-center justify-center space-x-2 text-gray-600">
-                      <BookOpen className="h-5 w-5" />
-                      <p>🤖 Cultural information will be provided by AI when API keys are configured</p>
-                    </div>
-                  </div>
-                ) : null}
-
               </div>
-            ) : null}
+            )}
           </div>
         )}
       </div>
@@ -1983,9 +1203,9 @@ Make sure to include at least 5-8 detailed cooking steps with traditional techni
       <footer className="bg-white/60 backdrop-blur-md border-t border-white/20 mt-16">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center text-gray-600">
-            <p>Built with ❤️ by HumanXAI for foodies</p>
-            <p className="mt-2">🔒 Privacy-first design - No data is stored or tracked</p>
-            <p className="mt-2">✨ Featuring Cultural Story Cards - Discover the heritage behind every dish</p>
+            <p>Built with ❤️ by HumanXAI for AI-native cooking</p>
+            <p className="mt-2">🤖 100% AI-generated recipes with cultural heritage</p>
+            <p className="mt-2">✨ Smart pattern recognition: Direct • Discovery • Ingredients • Context</p>
           </div>
         </div>
       </footer>
