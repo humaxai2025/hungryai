@@ -332,7 +332,9 @@ const App = () => {
   const generateAIResponse = async (pattern, query) => {
     const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
     
-    if (!GEMINI_API_KEY || GEMINI_API_KEY.length < 20) {
+    // Validate API key properly
+    if (!GEMINI_API_KEY || typeof GEMINI_API_KEY !== 'string' || GEMINI_API_KEY.length < 20) {
+      console.log('❌ Gemini API key not configured properly');
       setApiKeyError(true);
       return null;
     }
@@ -467,8 +469,12 @@ Time_Required: [Preparation and cooking time]
 
 Optimize for the specific context requirements.`;
           break;
+          
+        default:
+          prompt = `Generate a complete recipe for: "${query}"`;
       }
 
+      console.log('🤖 Sending request to Gemini API...');
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
         method: 'POST',
         headers: {
@@ -488,31 +494,33 @@ Optimize for the specific context requirements.`;
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ Gemini API failed: ${response.status} - ${errorText}`);
         throw new Error(`Gemini API failed: ${response.status}`);
       }
 
       const result = await response.json();
       const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
-      if (aiText) {
-        console.log('🤖 AI Response:', aiText);
-        return parseAIResponse(aiText, pattern.type);
+      if (aiText && typeof aiText === 'string' && aiText.length > 0) {
+        console.log('✅ AI Response received:', aiText.length, 'characters');
+        return await parseAIResponse(aiText, pattern.type);
       }
 
-      throw new Error('No response from AI');
+      throw new Error('No valid response from AI');
     } catch (error) {
-      console.error('AI generation error:', error);
+      console.error('❌ AI generation error:', error);
       setApiKeyError(true);
       return null;
     }
   };
 
   // Parse AI Response based on pattern type
-  const parseAIResponse = (aiText, patternType) => {
+  const parseAIResponse = async (aiText, patternType) => {
     try {
       if (patternType === 'direct') {
         // Parse complete recipe
-        const recipe = parseCompleteRecipe(aiText);
+        const recipe = await parseCompleteRecipe(aiText);
         return { type: 'recipe', data: recipe };
       } else {
         // Parse recipe suggestions
@@ -520,7 +528,7 @@ Optimize for the specific context requirements.`;
         return { type: 'suggestions', data: suggestions };
       }
     } catch (error) {
-      console.error('Error parsing AI response:', error);
+      console.error('❌ Error parsing AI response:', error);
       return null;
     }
   };
@@ -531,47 +539,53 @@ Optimize for the specific context requirements.`;
     const HF_API_KEY = import.meta.env.VITE_HF_API_KEY;
     
     try {
-      // Try DALL-E first (best quality)
-      if (OPENAI_API_KEY && OPENAI_API_KEY.length > 20) {
+      // Try DALL-E first (best quality) - with proper validation
+      if (OPENAI_API_KEY && typeof OPENAI_API_KEY === 'string' && OPENAI_API_KEY.length > 20) {
         console.log('🎨 Generating DALL-E image...');
         
-        const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${OPENAI_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: "dall-e-3",
-            prompt: `A beautiful, appetizing photo of ${recipeName}, ${description}. Professional food photography, vibrant colors, restaurant quality presentation, high resolution, natural lighting, closeup view.`,
-            size: "1024x1024",
-            quality: "standard",
-            n: 1
-          })
-        });
+        try {
+          const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${OPENAI_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: "dall-e-3",
+              prompt: `A beautiful, appetizing photo of ${recipeName}, ${description}. Professional food photography, vibrant colors, restaurant quality presentation, high resolution, natural lighting, closeup view.`,
+              size: "1024x1024",
+              quality: "standard",
+              n: 1
+            })
+          });
 
-        if (dalleResponse.ok) {
-          const dalleResult = await dalleResponse.json();
-          if (dalleResult.data && dalleResult.data[0]) {
-            console.log('✅ DALL-E image generated successfully!');
-            return dalleResult.data[0].url;
+          if (dalleResponse.ok) {
+            const dalleResult = await dalleResponse.json();
+            if (dalleResult.data && dalleResult.data[0] && dalleResult.data[0].url) {
+              console.log('✅ DALL-E image generated successfully!');
+              return dalleResult.data[0].url;
+            }
+          } else {
+            console.log('❌ DALL-E failed:', dalleResponse.status);
           }
-        } else {
-          console.log('❌ DALL-E failed:', dalleResponse.status);
+        } catch (dalleError) {
+          console.log('❌ DALL-E error:', dalleError.message);
         }
       }
 
-      // Fallback to Hugging Face Stable Diffusion
-      if (HF_API_KEY && HF_API_KEY.startsWith('hf_')) {
+      // Fallback to Hugging Face Stable Diffusion - with better error handling
+      if (HF_API_KEY && typeof HF_API_KEY === 'string' && HF_API_KEY.startsWith('hf_')) {
         console.log('🎨 Trying Stable Diffusion image generation...');
         
+        // Use more reliable Hugging Face models
         const stableDiffusionModels = [
-          'stabilityai/stable-diffusion-2-1',
-          'runwayml/stable-diffusion-v1-5'
+          'runwayml/stable-diffusion-v1-5',
+          'CompVis/stable-diffusion-v1-4'
         ];
 
         for (const model of stableDiffusionModels) {
           try {
+            console.log(`🔄 Trying model: ${model}`);
             const sdResponse = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
               method: 'POST',
               headers: {
@@ -582,21 +596,30 @@ Optimize for the specific context requirements.`;
                 inputs: `professional food photography of ${recipeName}, delicious, appetizing, high quality, restaurant presentation, vibrant colors, natural lighting, detailed, masterpiece`,
                 parameters: {
                   guidance_scale: 7.5,
-                  num_inference_steps: 50
+                  num_inference_steps: 30,
+                  width: 512,
+                  height: 512
                 },
                 options: {
-                  wait_for_model: true
+                  wait_for_model: true,
+                  use_cache: false
                 }
               })
             });
 
             if (sdResponse.ok) {
-              const imageBlob = await sdResponse.blob();
-              const imageUrl = URL.createObjectURL(imageBlob);
-              console.log(`✅ ${model.split('/')[1]} image generated!`);
-              return imageUrl;
+              const contentType = sdResponse.headers.get('content-type');
+              if (contentType && contentType.includes('image')) {
+                const imageBlob = await sdResponse.blob();
+                const imageUrl = URL.createObjectURL(imageBlob);
+                console.log(`✅ ${model.split('/')[1]} image generated!`);
+                return imageUrl;
+              } else {
+                console.log(`❌ ${model.split('/')[1]} returned non-image content`);
+              }
             } else {
-              console.log(`❌ ${model.split('/')[1]} failed:`, sdResponse.status);
+              const errorText = await sdResponse.text();
+              console.log(`❌ ${model.split('/')[1]} failed: ${sdResponse.status} - ${errorText}`);
               continue;
             }
           } catch (error) {
@@ -606,9 +629,10 @@ Optimize for the specific context requirements.`;
         }
       }
 
+      console.log('❌ All image generation methods failed or no API keys configured');
       return null;
     } catch (error) {
-      console.error('AI image generation error:', error);
+      console.error('❌ AI image generation error:', error);
       return null;
     }
   };
@@ -713,29 +737,54 @@ Optimize for the specific context requirements.`;
   const parseRecipeSuggestions = (aiText, patternType) => {
     const suggestions = [];
     
+    // Validate input
+    if (!aiText || typeof aiText !== 'string') {
+      console.error('❌ Invalid aiText for parsing suggestions');
+      return suggestions;
+    }
+    
     for (let i = 1; i <= 4; i++) {
       let nameMatch, descMatch, extraMatch;
       
-      if (patternType === 'discovery') {
-        nameMatch = aiText.match(new RegExp(`DISH_${i}:[\\s\\S]*?Name:\\s*([^\\n\\r]+)`, 'i'));
-        descMatch = aiText.match(new RegExp(`DISH_${i}:[\\s\\S]*?Description:\\s*([^\\n\\r]+)`, 'i'));
-        extraMatch = aiText.match(new RegExp(`DISH_${i}:[\\s\\S]*?Appeal:\\s*([^\\n\\r]+)`, 'i'));
-      } else if (patternType === 'ingredients') {
-        nameMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Name:\\s*([^\\n\\r]+)`, 'i'));
-        descMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Description:\\s*([^\\n\\r]+)`, 'i'));
-        extraMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Additional_Needed:\\s*([^\\n\\r]+)`, 'i'));
-      } else if (patternType === 'context') {
-        nameMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Name:\\s*([^\\n\\r]+)`, 'i'));
-        descMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Description:\\s*([^\\n\\r]+)`, 'i'));
-        extraMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Context_Benefits:\\s*([^\\n\\r]+)`, 'i'));
+      try {
+        if (patternType === 'discovery') {
+          nameMatch = aiText.match(new RegExp(`DISH_${i}:[\\s\\S]*?Name:\\s*([^\\n\\r]+)`, 'i'));
+          descMatch = aiText.match(new RegExp(`DISH_${i}:[\\s\\S]*?Description:\\s*([^\\n\\r]+)`, 'i'));
+          extraMatch = aiText.match(new RegExp(`DISH_${i}:[\\s\\S]*?Appeal:\\s*([^\\n\\r]+)`, 'i'));
+        } else if (patternType === 'ingredients') {
+          nameMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Name:\\s*([^\\n\\r]+)`, 'i'));
+          descMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Description:\\s*([^\\n\\r]+)`, 'i'));
+          extraMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Additional_Needed:\\s*([^\\n\\r]+)`, 'i'));
+        } else if (patternType === 'context') {
+          nameMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Name:\\s*([^\\n\\r]+)`, 'i'));
+          descMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Description:\\s*([^\\n\\r]+)`, 'i'));
+          extraMatch = aiText.match(new RegExp(`RECIPE_${i}:[\\s\\S]*?Context_Benefits:\\s*([^\\n\\r]+)`, 'i'));
+        }
+        
+        if (nameMatch && descMatch) {
+          suggestions.push({
+            id: i,
+            name: nameMatch[1] ? nameMatch[1].trim() : `Recipe ${i}`,
+            description: descMatch[1] ? descMatch[1].trim() : 'A delicious recipe to try',
+            extra: extraMatch && extraMatch[1] ? extraMatch[1].trim() : '',
+            patternType
+          });
+        }
+      } catch (regexError) {
+        console.warn(`❌ Error parsing suggestion ${i}:`, regexError);
+        // Continue to next suggestion
       }
-      
-      if (nameMatch && descMatch) {
+    }
+    
+    // If no suggestions found, create fallback suggestions
+    if (suggestions.length === 0) {
+      console.log('⚠️ No suggestions parsed, creating fallback suggestions');
+      for (let i = 1; i <= 3; i++) {
         suggestions.push({
           id: i,
-          name: nameMatch[1].trim(),
-          description: descMatch[1].trim(),
-          extra: extraMatch ? extraMatch[1].trim() : '',
+          name: `Recipe Suggestion ${i}`,
+          description: 'AI-generated recipe based on your request',
+          extra: 'Great choice for your needs',
           patternType
         });
       }
