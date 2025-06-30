@@ -533,13 +533,13 @@ Optimize for the specific context requirements.`;
     }
   };
 
-  // AI Image Generation Function
+  // AI Image Generation Function with better fallbacks
   const generateRecipeImage = async (recipeName, description) => {
     const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
     const HF_API_KEY = import.meta.env.VITE_HF_API_KEY;
     
     try {
-      // Try DALL-E first (best quality) - with proper validation
+      // Try DALL-E first (best quality and most reliable)
       if (OPENAI_API_KEY && typeof OPENAI_API_KEY === 'string' && OPENAI_API_KEY.length > 20) {
         console.log('🎨 Generating DALL-E image...');
         
@@ -566,39 +566,40 @@ Optimize for the specific context requirements.`;
               return dalleResult.data[0].url;
             }
           } else {
-            console.log('❌ DALL-E failed:', dalleResponse.status);
+            const errorText = await dalleResponse.text();
+            console.log('❌ DALL-E failed:', dalleResponse.status, errorText);
           }
         } catch (dalleError) {
           console.log('❌ DALL-E error:', dalleError.message);
         }
       }
 
-      // Fallback to Hugging Face Stable Diffusion - with better error handling
+      // Try alternative image generation approaches if HF is available
       if (HF_API_KEY && typeof HF_API_KEY === 'string' && HF_API_KEY.startsWith('hf_')) {
-        console.log('🎨 Trying Stable Diffusion image generation...');
+        console.log('🎨 Trying alternative HF image generation...');
         
-        // Use more reliable Hugging Face models
-        const stableDiffusionModels = [
-          'runwayml/stable-diffusion-v1-5',
-          'CompVis/stable-diffusion-v1-4'
+        // Try text-to-image models that are more likely to work
+        const workingModels = [
+          'black-forest-labs/FLUX.1-schnell',
+          'stabilityai/stable-diffusion-xl-base-1.0',
+          'Lykon/DreamShaper'
         ];
 
-        for (const model of stableDiffusionModels) {
+        for (const model of workingModels) {
           try {
             console.log(`🔄 Trying model: ${model}`);
-            const sdResponse = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+            
+            const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${HF_API_KEY}`,
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                inputs: `professional food photography of ${recipeName}, delicious, appetizing, high quality, restaurant presentation, vibrant colors, natural lighting, detailed, masterpiece`,
+                inputs: `professional food photography, ${recipeName}, delicious meal, restaurant quality, high resolution, appetizing, vibrant colors`,
                 parameters: {
-                  guidance_scale: 7.5,
-                  num_inference_steps: 30,
-                  width: 512,
-                  height: 512
+                  num_inference_steps: 20,
+                  guidance_scale: 7.5
                 },
                 options: {
                   wait_for_model: true,
@@ -607,29 +608,50 @@ Optimize for the specific context requirements.`;
               })
             });
 
-            if (sdResponse.ok) {
-              const contentType = sdResponse.headers.get('content-type');
+            console.log(`Response status for ${model}: ${response.status}`);
+
+            if (response.ok) {
+              const contentType = response.headers.get('content-type');
+              console.log(`Content type: ${contentType}`);
+              
               if (contentType && contentType.includes('image')) {
-                const imageBlob = await sdResponse.blob();
-                const imageUrl = URL.createObjectURL(imageBlob);
-                console.log(`✅ ${model.split('/')[1]} image generated!`);
-                return imageUrl;
+                const imageBlob = await response.blob();
+                if (imageBlob.size > 0) {
+                  const imageUrl = URL.createObjectURL(imageBlob);
+                  console.log(`✅ ${model.split('/').pop()} image generated! Size: ${imageBlob.size} bytes`);
+                  return imageUrl;
+                }
               } else {
-                console.log(`❌ ${model.split('/')[1]} returned non-image content`);
+                const responseText = await response.text();
+                console.log(`❌ ${model} returned non-image:`, responseText.substring(0, 200));
               }
             } else {
-              const errorText = await sdResponse.text();
-              console.log(`❌ ${model.split('/')[1]} failed: ${sdResponse.status} - ${errorText}`);
-              continue;
+              const errorText = await response.text();
+              console.log(`❌ ${model} failed: ${response.status} - ${errorText.substring(0, 200)}`);
             }
           } catch (error) {
-            console.log(`❌ ${model.split('/')[1]} error:`, error.message);
-            continue;
+            console.log(`❌ ${model} error:`, error.message);
           }
         }
       }
 
-      console.log('❌ All image generation methods failed or no API keys configured');
+      // If both APIs fail, try a simple placeholder service
+      console.log('🎨 Trying placeholder image service...');
+      try {
+        const encodedRecipeName = encodeURIComponent(recipeName);
+        const placeholderUrl = `https://via.placeholder.com/512x512/4F46E5/FFFFFF?text=${encodedRecipeName}`;
+        
+        // Test if the placeholder loads
+        const testResponse = await fetch(placeholderUrl, { method: 'HEAD' });
+        if (testResponse.ok) {
+          console.log('✅ Using placeholder image service');
+          return placeholderUrl;
+        }
+      } catch (placeholderError) {
+        console.log('❌ Placeholder service failed:', placeholderError.message);
+      }
+
+      console.log('❌ All image generation methods failed');
       return null;
     } catch (error) {
       console.error('❌ AI image generation error:', error);
