@@ -328,23 +328,168 @@ const App = () => {
     return { type: 'direct', query: lowerQuery };
   };
 
-  // AI-Native Recipe Generation
+  // AI-Native Recipe Generation with HuggingFace Primary + Gemini Fallback
   const generateAIResponse = async (pattern, query) => {
+    const HF_API_KEY = import.meta.env.VITE_HF_API_KEY;
     const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
     
-    // Validate API key properly
-    if (!GEMINI_API_KEY || typeof GEMINI_API_KEY !== 'string' || GEMINI_API_KEY.length < 20) {
-      console.log('❌ Gemini API key not configured properly');
+    // Validate at least one API key
+    const hasValidHF = HF_API_KEY && typeof HF_API_KEY === 'string' && HF_API_KEY.startsWith('hf_');
+    const hasValidGemini = GEMINI_API_KEY && typeof GEMINI_API_KEY === 'string' && GEMINI_API_KEY.length > 20;
+    
+    if (!hasValidHF && !hasValidGemini) {
+      console.log('❌ No valid API keys configured');
       setApiKeyError(true);
       return null;
     }
 
+    // Try HuggingFace first (primary)
+    if (hasValidHF) {
+      console.log('🤖 Trying HuggingFace models first...');
+      const hfResult = await tryHuggingFaceGeneration(pattern, query, HF_API_KEY);
+      if (hfResult) {
+        console.log('✅ HuggingFace generation successful!');
+        return hfResult;
+      }
+      console.log('🔄 HuggingFace failed, trying Gemini fallback...');
+    }
+
+    // Fallback to Gemini
+    if (hasValidGemini) {
+      console.log('🔄 Using Gemini as fallback...');
+      const geminiResult = await tryGeminiGeneration(pattern, query, GEMINI_API_KEY);
+      if (geminiResult) {
+        console.log('✅ Gemini fallback successful!');
+        return geminiResult;
+      }
+      console.log('❌ Gemini also failed');
+    }
+
+    console.log('❌ All AI generation methods failed');
+    setApiKeyError(true);
+    return null;
+  };
+
+  // HuggingFace Generation (Primary)
+  const tryHuggingFaceGeneration = async (pattern, query, apiKey) => {
+    const reliableModels = [
+      'microsoft/DialoGPT-large',
+      'facebook/blenderbot-1B-distill', 
+      'microsoft/DialoGPT-medium',
+      'google/flan-t5-large',
+      'facebook/blenderbot-400M-distill'
+    ];
+
+    let prompt = createPromptForPattern(pattern, query);
+
+    for (const model of reliableModels) {
+      try {
+        console.log(`🔄 Trying HF model: ${model}`);
+        
+        const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            inputs: prompt,
+            parameters: {
+              max_new_tokens: 1000,
+              temperature: 0.7,
+              do_sample: true,
+              top_p: 0.9,
+              repetition_penalty: 1.1
+            },
+            options: {
+              wait_for_model: true,
+              use_cache: false
+            }
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log(`✅ ${model.split('/')[1]} responded:`, result);
+          
+          let aiText = '';
+          if (Array.isArray(result) && result[0]) {
+            aiText = result[0].generated_text || result[0].summary_text || '';
+          } else if (result.generated_text) {
+            aiText = result.generated_text;
+          }
+
+          if (aiText && typeof aiText === 'string' && aiText.length > 50) {
+            // Clean up the response (remove input prompt if repeated)
+            if (aiText.includes(prompt)) {
+              aiText = aiText.replace(prompt, '').trim();
+            }
+            
+            console.log('✅ Valid HF response received:', aiText.length, 'characters');
+            return await parseAIResponse(aiText, pattern.type);
+          }
+        } else {
+          const errorText = await response.text();
+          console.log(`❌ ${model.split('/')[1]} failed: ${response.status} - ${errorText.substring(0, 200)}`);
+        }
+      } catch (error) {
+        console.log(`❌ ${model.split('/')[1]} error:`, error.message);
+      }
+    }
+
+    return null;
+  };
+
+  // Gemini Generation (Fallback)
+  const tryGeminiGeneration = async (pattern, query, apiKey) => {
     try {
-      let prompt = '';
-      
-      switch (pattern.type) {
-        case 'direct':
-          prompt = `Generate a complete recipe for: "${query}"
+      let prompt = createPromptForPattern(pattern, query);
+
+      console.log('🤖 Sending request to Gemini API...');
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 3000,
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ Gemini API failed: ${response.status} - ${errorText}`);
+        return null;
+      }
+
+      const result = await response.json();
+      const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (aiText && typeof aiText === 'string' && aiText.length > 0) {
+        console.log('✅ Gemini response received:', aiText.length, 'characters');
+        return await parseAIResponse(aiText, pattern.type);
+      }
+
+      return null;
+    } catch (error) {
+      console.error('❌ Gemini generation error:', error);
+      return null;
+    }
+  };
+
+  // Create prompt based on pattern (shared between HF and Gemini)
+  const createPromptForPattern = (pattern, query) => {
+    switch (pattern.type) {
+      case 'direct':
+        return `Generate a complete recipe for: "${query}"
 
 Please provide a detailed response in this EXACT format:
 
@@ -380,10 +525,9 @@ ALTERNATIVES:
 Alt1: [substitute for main ingredient] (1:1 ratio)
 Alt2: [substitute for second ingredient] (1:1 ratio)
 Alt3: [substitute for third ingredient] (1:1 ratio)`;
-          break;
-          
-        case 'discovery':
-          prompt = `Suggest 4 dishes based on: "${query}"
+        
+      case 'discovery':
+        return `Suggest 4 dishes based on: "${query}"
 
 For each dish, provide:
 
@@ -408,10 +552,9 @@ Description: [Brief description why it's good for this query]
 Appeal: [What makes it special]
 
 Provide variety in cuisines and cooking methods.`;
-          break;
-          
-        case 'ingredients':
-          prompt = `Suggest 4 recipes using: "${query}"
+        
+      case 'ingredients':
+        return `Suggest 4 recipes using: "${query}"
 
 For each recipe, optimize for the available ingredients:
 
@@ -436,10 +579,9 @@ Description: [How it uses the available ingredients]
 Additional_Needed: [2-3 common ingredients to complete the dish]
 
 Focus on recipes that make the best use of available ingredients.`;
-          break;
-          
-        case 'context':
-          prompt = `Suggest 4 recipes for: "${query}"
+        
+      case 'context':
+        return `Suggest 4 recipes for: "${query}"
 
 For each recipe, provide context-specific information:
 
@@ -468,50 +610,9 @@ Context_Benefits: [Specific advantages for this situation]
 Time_Required: [Preparation and cooking time]
 
 Optimize for the specific context requirements.`;
-          break;
-          
-        default:
-          prompt = `Generate a complete recipe for: "${query}"`;
-      }
-
-      console.log('🤖 Sending request to Gemini API...');
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 3000,
-          }
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`❌ Gemini API failed: ${response.status} - ${errorText}`);
-        throw new Error(`Gemini API failed: ${response.status}`);
-      }
-
-      const result = await response.json();
-      const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (aiText && typeof aiText === 'string' && aiText.length > 0) {
-        console.log('✅ AI Response received:', aiText.length, 'characters');
-        return await parseAIResponse(aiText, pattern.type);
-      }
-
-      throw new Error('No valid response from AI');
-    } catch (error) {
-      console.error('❌ AI generation error:', error);
-      setApiKeyError(true);
-      return null;
+        
+      default:
+        return `Generate a complete recipe for: "${query}"`;
     }
   };
 
@@ -997,22 +1098,224 @@ Optimize for the specific context requirements.`;
         )}
 
         {!selectedRecipe ? (
-          <div className="center-container">
-            <div className="text-center mb-12 w-full">
-              <h1 className="text-6xl font-bold text-gray-800 mb-4">
-                What's Cooking?
-              </h1>
-              <p className="text-xl text-gray-600 mb-8">
-                AI-powered recipe discovery! Tell me what you want and I'll create the perfect recipe with cultural insights.
-              </p>
+          /* Ultra-Modern Homepage */
+          <div className="relative min-h-[80vh] flex items-center justify-center">
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-10 left-10 w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-20 animate-bounce"></div>
+              <div className="absolute top-20 right-20 w-16 h-16 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full opacity-20 animate-pulse"></div>
+              <div className="absolute bottom-20 left-20 w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full opacity-20 animate-bounce" style={{animationDelay: '1s'}}></div>
+              <div className="absolute bottom-10 right-10 w-14 h-14 bg-gradient-to-r from-orange-400 to-red-400 rounded-full opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
+            </div>
+
+            <div className="relative z-10 text-center max-w-6xl mx-auto px-4">
+              {/* Hero Section */}
+              <div className="mb-16">
+                <div className="inline-flex items-center justify-center p-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full mb-6">
+                  <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent text-sm font-semibold px-4 py-1">
+                    🤖 Powered by HuggingFace + Gemini AI
+                  </span>
+                </div>
+                
+                <h1 className="text-7xl md:text-8xl font-black mb-6 bg-gradient-to-r from-gray-900 via-purple-900 to-gray-900 bg-clip-text text-transparent leading-tight">
+                  FlavorAI
+                </h1>
+                
+                <p className="text-2xl md:text-3xl text-gray-600 mb-4 font-light leading-relaxed">
+                  Your AI Chef That Understands
+                </p>
+                
+                <p className="text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+                  From simple ingredients to complex cravings, our AI creates personalized recipes with cultural stories, smart alternatives, and perfect timing.
+                </p>
+              </div>
+
+              {/* Search Interface */}
+              <div className="mb-16">
+                <div className="relative max-w-3xl mx-auto">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-3xl opacity-20 blur-xl transform scale-105"></div>
+                  
+                  <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/40 p-2">
+                    <div className="flex items-center">
+                      <div className="flex-1 relative">
+                        <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-400" />
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
+                          placeholder="I want spicy ramen for a cold evening..."
+                          className="w-full pl-16 pr-6 py-6 text-xl bg-transparent border-0 focus:outline-none placeholder-gray-400 text-gray-800"
+                          disabled={loading}
+                        />
+                      </div>
+                      
+                      <button
+                        onClick={() => handleSearch(searchQuery)}
+                        disabled={loading || !searchQuery.trim()}
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-6 rounded-2xl font-semibold text-lg hover:from-purple-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-400 transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-xl"
+                      >
+                        {loading ? (
+                          <Loader className="h-6 w-6 animate-spin" />
+                        ) : (
+                          <div className="flex items-center space-x-2">
+                            <span>Create</span>
+                            <Sparkles className="h-5 w-5" />
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Pattern Indicator */}
+                {queryPattern && (
+                  <div className="mt-6 flex justify-center">
+                    <div className="bg-gradient-to-r from-indigo-100 to-purple-100 px-6 py-3 rounded-full border border-indigo-200">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-pulse"></div>
+                        <span className="text-indigo-700 font-medium">
+                          AI Pattern: {queryPattern.type.charAt(0).toUpperCase() + queryPattern.type.slice(1)} Recipe
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Smart Pattern Examples - Ultra Modern Cards */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                {[
+                  {
+                    icon: "🍽️",
+                    title: "Direct Recipe",
+                    subtitle: "Instant Creation",
+                    examples: ["I want chicken tikka masala", "Make me authentic pad thai"],
+                    gradient: "from-blue-500 to-cyan-500",
+                    bgGradient: "from-blue-50 to-cyan-50"
+                  },
+                  {
+                    icon: "🔍", 
+                    title: "Discovery",
+                    subtitle: "Smart Suggestions",
+                    examples: ["What goes with naan bread?", "Best dishes for rice?"],
+                    gradient: "from-green-500 to-emerald-500",
+                    bgGradient: "from-green-50 to-emerald-50"
+                  },
+                  {
+                    icon: "🥘",
+                    title: "Ingredients",
+                    subtitle: "Use What You Have",
+                    examples: ["I have chicken and rice", "Recipe with tomatoes"],
+                    gradient: "from-orange-500 to-red-500", 
+                    bgGradient: "from-orange-50 to-red-50"
+                  },
+                  {
+                    icon: "⚡",
+                    title: "Context",
+                    subtitle: "Perfect Timing",
+                    examples: ["Quick lunch for office", "Healthy dinner ideas"],
+                    gradient: "from-purple-500 to-pink-500",
+                    bgGradient: "from-purple-50 to-pink-50"
+                  }
+                ].map((pattern, index) => (
+                  <div
+                    key={index}
+                    className="group relative overflow-hidden bg-white/60 backdrop-blur-lg rounded-3xl p-6 border border-white/40 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 cursor-pointer"
+                    onClick={() => {
+                      setSearchQuery(pattern.examples[0]);
+                      handleSearch(pattern.examples[0]);
+                    }}
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${pattern.bgGradient} opacity-0 group-hover:opacity-50 transition-opacity duration-500`}></div>
+                    
+                    <div className="relative z-10">
+                      <div className={`w-16 h-16 bg-gradient-to-r ${pattern.gradient} rounded-2xl flex items-center justify-center text-2xl mb-4 transform group-hover:scale-110 transition-transform duration-300`}>
+                        {pattern.icon}
+                      </div>
+                      
+                      <h3 className="font-bold text-lg text-gray-800 mb-1">{pattern.title}</h3>
+                      <p className="text-sm text-gray-600 mb-4">{pattern.subtitle}</p>
+                      
+                      <div className="space-y-2">
+                        {pattern.examples.map((example, i) => (
+                          <div key={i} className="bg-white/60 rounded-xl px-3 py-2 text-xs text-gray-600 border border-gray-200">
+                            "{example}"
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="mt-4 flex items-center text-xs font-medium text-gray-500 group-hover:text-gray-700 transition-colors">
+                        <span>Try this pattern</span>
+                        <ArrowRight className="h-3 w-3 ml-1 transform group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Loading State */}
+              {loading && (
+                <div className="mb-8">
+                  <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 border border-white/40 shadow-xl max-w-2xl mx-auto">
+                    <div className="flex items-center justify-center space-x-4">
+                      <div className="relative">
+                        <Sparkles className="h-8 w-8 text-purple-600 animate-spin" />
+                        <div className="absolute inset-0 h-8 w-8 text-pink-600 animate-ping opacity-75">
+                          <Sparkles className="h-8 w-8" />
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-gray-800 mb-1">
+                          AI Chef is cooking...
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {queryPattern?.type === 'direct' ? 'Creating your complete recipe with cultural insights' :
+                           queryPattern?.type === 'discovery' ? 'Finding perfect dish suggestions for you' :
+                           queryPattern?.type === 'ingredients' ? 'Optimizing recipes for your ingredients' :
+                           'Crafting context-perfect recipes'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Progress Animation */}
+                    <div className="mt-6 bg-gray-200 rounded-full h-2 overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
               
-              {/* Smart Query Examples */}
-              <div className="mb-8 grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-                <div className="bg-white/60 rounded-xl p-4 text-left">
-                  <h3 className="font-semibold text-indigo-700 mb-2">🍽️ Direct Recipe</h3>
-                  <p className="text-sm text-gray-600 mb-2">Get instant complete recipes:</p>
-                  <div className="text-xs space-y-1">
-                    <div className="bg-gray-100 px-2 py-1 rounded">"I want to eat chicken tikka masala"</div>
+              {/* Features Highlight */}
+              {!loading && (
+                <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                  {[
+                    {
+                      icon: <Lightbulb className="h-8 w-8" />,
+                      title: "Smart AI Understanding",
+                      description: "Powered by HuggingFace + Gemini for intelligent recipe generation"
+                    },
+                    {
+                      icon: <BookOpen className="h-8 w-8" />,
+                      title: "Cultural Heritage",
+                      description: "Every recipe comes with authentic cultural stories and traditions"
+                    },
+                    {
+                      icon: <Sparkles className="h-8 w-8" />,
+                      title: "Personalized Results",
+                      description: "Adapts to your ingredients, context, and cooking preferences"
+                    }
+                  ].map((feature, index) => (
+                    <div key={index} className="text-center group">
+                      <div className="bg-gradient-to-r from-gray-100 to-gray-200 group-hover:from-purple-100 group-hover:to-pink-100 rounded-2xl p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center text-gray-600 group-hover:text-purple-600 transition-all duration-300">
+                        {feature.icon}
+                      </div>
+                      <h3 className="font-semibold text-gray-800 mb-2">{feature.title}</h3>
+                      <p className="text-sm text-gray-600 leading-relaxed">{feature.description}</p>
+                    </div>
+                  ))}
+                </div>
+              )}d">"I want to eat chicken tikka masala"</div>
                     <div className="bg-gray-100 px-2 py-1 rounded">"Make me authentic pad thai"</div>
                   </div>
                 </div>
